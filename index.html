@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
 <title>The State of Recursive Self-Improvement · The RSI Book</title>
 <meta name="description" content="Chapter 1 of The RSI Book, an open book. Every self-improving system is the same loop, and the loop is exactly as trustworthy as its judge.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -207,24 +208,24 @@
         <li><a href="chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
         <li><span class="soon"><span class="num">03</span>Coming soon<span class="pill">Soon</span></span></li>
       </ol>
-      <h3 class="section-gap">Research Papers</h3>
+      <h3 class="section-gap">Research</h3>
       <ol>
-        <li><a href="papers/index.html"><span class="num">★</span>All papers</a></li>
-        <li><a href="papers/reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
-        <li><a href="papers/agent0.html"><span class="num">02</span>Agent0</a></li>
-        <li><a href="papers/alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
-        <li><a href="papers/posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
-        <li><a href="papers/bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
-        <li><a href="papers/agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
-        <li><a href="papers/life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
-        <li><a href="papers/skillopt.html"><span class="num">08</span>SkillOpt</a></li>
-        <li><a href="papers/sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
-        <li><a href="papers/fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
-        <li><a href="papers/scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
-        <li><a href="papers/meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
-        <li><a href="papers/cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
-        <li><a href="papers/self-harness.html"><span class="num">14</span>Self-Harness</a></li>
-        <li><a href="papers/harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+        <li><a href="papers/autoresearch.html"><span class="num">01</span>autoresearch</a></li>
+        <li><a href="papers/reasoningbank.html"><span class="num">02</span>ReasoningBank</a></li>
+        <li><a href="papers/agent0.html"><span class="num">03</span>Agent0</a></li>
+        <li><a href="papers/alma.html"><span class="num">04</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="papers/posttrainbench.html"><span class="num">05</span>PostTrainBench</a></li>
+        <li><a href="papers/bilevel-autoresearch.html"><span class="num">06</span>Bilevel Autoresearch</a></li>
+        <li><a href="papers/agentic-harness-engineering.html"><span class="num">07</span>Agentic Harness Engineering</a></li>
+        <li><a href="papers/life-harness.html"><span class="num">08</span>LIFE-HARNESS</a></li>
+        <li><a href="papers/skillopt.html"><span class="num">09</span>SkillOpt</a></li>
+        <li><a href="papers/sia.html"><span class="num">10</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="papers/fluxmem.html"><span class="num">11</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="papers/scaling-laws-harnesses.html"><span class="num">12</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="papers/meta-agent-challenge.html"><span class="num">13</span>Meta-Agent Challenge</a></li>
+        <li><a href="papers/cl-bench.html"><span class="num">14</span>Continual Learning Bench</a></li>
+        <li><a href="papers/self-harness.html"><span class="num">15</span>Self-Harness</a></li>
+        <li><a href="papers/harnessx.html"><span class="num">16</span>HarnessX: Harness Foundry</a></li>
       </ol>
     </nav>
   </aside>
@@ -232,7 +233,6 @@
   <article>
     <div class="chapter-eyebrow">Chapter 01</div>
     <h1>The State of Recursive Self-Improvement</h1>
-    <p class="standfirst">An agent rigged its own error messages to leak the answer key. The same year, billions went into systems built on the same loop. I spent months in the research, and it comes down to one sentence.</p>
     <div class="byline">
       <span>Pratik Bhavsar</span>
       <span>12 min read</span>
@@ -363,6 +363,16 @@ flowchart LR
 
     <p>Put all four side by side and the message is precise. Capability arrives in flashes wherever the objective is narrow and the signal is clean. Reliability, direction-setting, and honest self-assessment have not arrived at all, and neither has evidence that a self-improvement gain survives contact with tasks the loop never saw. Doing is automated. Judging is the moat, and so is knowing whether the doing generalized. The labs sprinting toward the autonomous corner will tell you the same thing in their own publications: their stated bottleneck is control and verification, not capability.</p>
 
+    <h2>In the wild</h2>
+
+    <p>The benchmarks above are academic. The same loop is already running in industry, and three examples mark the range from hobbyist to funded lab. They are worth seeing because they show the pattern is not theoretical: people are pointing the propose-evaluate-keep loop at real work today.</p>
+
+    <p>The smallest and most honest is Karpathy's <a href="papers/autoresearch.html">autoresearch</a>: an agent given one editable training file, a five-minute budget, and a single metric. It mutates the code, trains, keeps the change if validation improved, reverts if not, and runs about 100 experiments overnight on one GPU. It is the universal loop reduced to three files, and it is the canonical reference the research systems cite. If you want to hold recursive self-improvement in your hands, this is the thing you can actually run.</p>
+
+    <p>One rung up, <a href="https://www.recursive.com/articles/first-steps-toward-automated-ai-research">Recursive</a> (the $650M-funded lab) published first results from an automated AI-research system aimed squarely at the autonomous corner: an agent improving model training and writing GPU kernels, the same territory SIA's kernel task lives in. It is early and the numbers are theirs to verify, but it is the loud-money thesis put to work rather than just pitched.</p>
+
+    <p>The most striking industrial result is <a href="https://poetiq.ai/posts/recursive_self_improvement_coding/">Poetiq's meta-system</a>, because it lands exactly on this book's thesis. Poetiq uses recursive self-improvement to automatically build a coding harness, with no fine-tuning and no special model access, only standard API calls. On LiveCodeBench Pro the learned harness lifted Gemini 3.1 Pro from 78.6% to 90.9%, and the same harness applied unchanged to GPT 5.5 pushed it to 93.9%, a new state of the art. The harness improved every model they tested, open and closed, and the cheapest model with the harness beat far more expensive ones without it. That is the LIFE-HARNESS lesson at commercial scale: evolve the interface, freeze it, and it transfers across models because the gain lives in the harness, not the weights.</p>
+
     <h2>Follow the money</h2>
 
     <p>Which makes the funding picture genuinely funny, if you look at where the dollars sit versus where the evidence points.</p>
@@ -387,7 +397,9 @@ flowchart LR
       <h2>References</h2>
       <ul>
         <li>Schmidhuber, Gödel Machines (2003) · <a href="https://arxiv.org/abs/cs/0309048">arxiv.org/abs/cs/0309048</a></li>
-        <li>Karpathy, autoresearch coverage and results · <a href="https://www.latent.space/p/ainews-autoresearch-sparks-of-recursive">latent.space</a></li>
+        <li>Karpathy, autoresearch · <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a> · <a href="papers/autoresearch.html">reading note</a></li>
+        <li>Recursive, First Steps Toward Automated AI Research · <a href="https://www.recursive.com/articles/first-steps-toward-automated-ai-research">recursive.com</a></li>
+        <li>Poetiq, Recursive Self-Improvement Delivers New SOTA Coding Performance · <a href="https://poetiq.ai/posts/recursive_self_improvement_coding/">poetiq.ai</a></li>
         <li>Geoffrey Huntley, the ralph loop (2025) · <a href="https://ghuntley.com/ralph/">ghuntley.com/ralph</a></li>
         <li>LIFE-HARNESS: Adapting the Interface, Not the Model (2026) · <a href="https://arxiv.org/abs/2605.22166">arxiv.org/abs/2605.22166</a></li>
         <li>GEPA: Reflective Prompt Evolution Can Outperform RL (ICLR 2026) · <a href="https://arxiv.org/abs/2507.19457">arxiv.org/abs/2507.19457</a></li>

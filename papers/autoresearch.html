@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
-<title>Adapting the Interface, Not the Model (LIFE-HARNESS) · Research Papers</title>
-<meta name="description" content="A deep-dive reading note on LIFE-HARNESS, which freezes the model and evolves a lifecycle-aware runtime harness, transferring across 18 model backbones.">
+<title>autoresearch: AI Running Overnight Training Experiments · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on Karpathy's autoresearch: an AI agent that edits a training file, trains for five minutes, keeps or reverts, and repeats overnight.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -219,14 +219,14 @@
       </ol>
       <h3 class="section-gap">Research</h3>
       <ol>
-        <li><a href="autoresearch.html"><span class="num">01</span>autoresearch</a></li>
+        <li><a class="active" aria-current="page" href="autoresearch.html"><span class="num">01</span>autoresearch</a></li>
         <li><a href="reasoningbank.html"><span class="num">02</span>ReasoningBank</a></li>
         <li><a href="agent0.html"><span class="num">03</span>Agent0</a></li>
         <li><a href="alma.html"><span class="num">04</span>ALMA: Meta-learned Memory</a></li>
         <li><a href="posttrainbench.html"><span class="num">05</span>PostTrainBench</a></li>
         <li><a href="bilevel-autoresearch.html"><span class="num">06</span>Bilevel Autoresearch</a></li>
         <li><a href="agentic-harness-engineering.html"><span class="num">07</span>Agentic Harness Engineering</a></li>
-        <li><a class="active" aria-current="page" href="life-harness.html"><span class="num">08</span>LIFE-HARNESS</a></li>
+        <li><a href="life-harness.html"><span class="num">08</span>LIFE-HARNESS</a></li>
         <li><a href="skillopt.html"><span class="num">09</span>SkillOpt</a></li>
         <li><a href="sia.html"><span class="num">10</span>SIA: Harness &amp; Weight Updates</a></li>
         <li><a href="fluxmem.html"><span class="num">11</span>FluxMem: Evolving Memory</a></li>
@@ -241,142 +241,128 @@
 
   <article>
     <div class="chapter-eyebrow">Paper Deep-Dive</div>
-    <h1>Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents</h1>
-    <p class="standfirst">Most agent failures in rule-governed domains are interface mismatches, not reasoning errors. LIFE-HARNESS leaves the model frozen and evolves the harness around it, and the fixes transfer across 18 model backbones.</p>
+    <h1>autoresearch: An AI Agent Running LLM Training Experiments Overnight</h1>
+    <p class="standfirst">Give an agent one editable training file, a five-minute budget, and a single metric. It mutates the code, trains, keeps the change if the number improved, and repeats while you sleep. The whole loop fits in three files.</p>
     <div class="byline">
-      <span>Tianshi Xu, Huifeng Wen, Meng Li · Peking University</span>
-      <span>arXiv:2605.22166</span>
-      <span>May 2026</span>
+      <span>Andrej Karpathy</span>
+      <span>github.com/karpathy/autoresearch</span>
+      <span>Mar 2026</span>
     </div>
 
     <div class="meta-card">
       <dl>
-        <dt>Authors</dt><dd>Tianshi Xu, Huifeng Wen, Meng Li (Peking University; first two equal contribution)</dd>
-        <dt>Evolution backbone</dt><dd>Harness evolved from Qwen3-4B-Instruct trajectories, transferred to 17 other models</dd>
-        <dt>Benchmarks</dt><dd>Seven deterministic environments from tau-bench, tau2-bench, and AgentBench</dd>
-        <dt>Tags</dt><dd>Harness adaptation · frozen model · interface failures · transfer · deterministic environments</dd>
+        <dt>Author</dt><dd>Andrej Karpathy (open-source repository, MIT license)</dd>
+        <dt>Substrate</dt><dd>A single-GPU simplified nanochat: GPT model, Muon + AdamW optimizer, full training loop in one file</dd>
+        <dt>Metric</dt><dd>val_bpb (validation bits per byte), lower is better, vocab-size-independent</dd>
+        <dt>Tags</dt><dd>Autoresearch · keep-or-revert loop · agentic ML · markdown harness · single-GPU</dd>
       </dl>
     </div>
 
-    <p class="lede">An LLM agent is shaped by its language model and by the runtime harness that mediates how it observes the environment, understands tools, realizes actions, interprets feedback, and regulates multi-step trajectories. Most adaptation methods update model parameters, but in deterministic, rule-governed domains many failures come from mismatches at the model-environment interface, not from the model's reasoning. LIFE-HARNESS is a lifecycle-aware runtime harness that improves frozen LLM agents without changing weights or the evaluation environment.</p>
+    <p class="lede">autoresearch is the most stripped-down working instance of recursive self-improvement you can run yourself. The idea is plain: give an AI agent a small but real LLM training setup and let it experiment autonomously overnight. It modifies the code, trains for five minutes, checks whether the result improved, keeps or discards the change, and repeats. You wake up to a log of experiments and, hopefully, a better model. It is the project that turned the propose-execute-evaluate loop from a thought experiment into something that runs on one GPU for the price of a night's electricity.</p>
 
-    <p>It evolves from training trajectories by converting recurring interaction failures into reusable interventions across four lifecycle layers, then stays fixed during held-out evaluation. The headline is breadth: across seven deterministic environments it improves 116 of 126 model-environment settings spanning 18 backbones, at an average relative improvement of 88.5%, and a harness evolved only from a 4B model's trajectories transfers to 17 other models.</p>
+    <p>The clever framing is where the human sits. You are not editing the Python a researcher would normally touch. Instead you program a <code class="inline">program.md</code> Markdown file that gives context to the agents and sets up your autonomous research org, while the agent edits the training code. The human iterates the instructions; the agent iterates the model.</p>
 
     <h2>The problem it attacks</h2>
 
-    <p>The paper starts with a failure autopsy. Across diverse interactive environments, it taxonomizes why agents fail and finds the model's reasoning is rarely the culprit. Four recurring categories emerge: action realization failures (the model intends a valid action but the harness mangles it), environment contract mismatches (the model misreads the rules or state it was given), procedural-skill gaps, and trajectory degeneration over long runs. These are interface problems. They live in how the harness presents the world to the model and translates the model's intent back, and no amount of weight updating fixes a harness that formats actions wrong.</p>
+    <p>Frontier ML research is rate-limited by humans who design experiments, run them, read the results, and decide what to try next. Most of that loop is mechanical: change one thing, train, compare to the best so far, keep or revert. autoresearch asks whether an agent can run that mechanical loop unattended on a real (if small) training task, and it answers yes, with a setup small enough that the whole thing stays reviewable. The constraint that makes it work is a fixed time budget, which turns a messy open-ended search into a stream of directly comparable experiments.</p>
 
     <div class="callout">
-      <p>If the failure is at the interface, fix the interface. Freeze the model and evolve the harness, because an interface repair transfers to every model that speaks through it.</p>
+      <p>The human stops editing code and starts editing the instructions. You program program.md, the research-org context, and the agent programs train.py, the model.</p>
     </div>
 
     <h2>How it works</h2>
 
-    <p>LIFE-HARNESS organizes the harness by the agent's interaction lifecycle into four layers, each targeting one failure category, and each producing auditable runtime interventions rather than opaque edits.</p>
+    <p>The repository is deliberately tiny: three files matter. <code class="inline">prepare.py</code> holds fixed constants, one-time data prep (it downloads training data and trains a BPE tokenizer), and runtime utilities like the dataloader and evaluation; the agent does not touch it. <code class="inline">train.py</code> is the single file the agent edits, containing the full GPT model, the optimizer, and the training loop; architecture, hyperparameters, optimizer, and batch size are all fair game. <code class="inline">program.md</code> is the baseline instructions for one agent, the file the human iterates on. You point a coding agent (Claude Code, Codex, or similar) at the repo with permissions disabled and prompt it to read program.md and start experimenting.</p>
 
-    <div class="fig" role="figure" aria-label="The four lifecycle layers">
-      <div class="panel-eyebrow">Four lifecycle layers</div>
+    <div class="fig" role="figure" aria-label="The autoresearch keep-or-revert loop">
+      <div class="panel-eyebrow">The overnight loop</div>
       <div class="mermaid">
 flowchart TD
-    OBS["Environment state + contract"] --> EC["1. Environment Contract Layer<br/>make the rules and state explicit"]
-    EC --> PS["2. Procedural Skill Layer<br/>inject task-level know-how"]
-    PS --> MODEL["Frozen LLM proposes an action"]
-    MODEL --> AR["3. Action Realization Layer<br/>validate and canonicalize the action"]
-    AR --> ENV["Execute in environment"]
-    ENV --> TR["4. Trajectory Regulation Layer<br/>monitor and stop degeneration"]
-    TR --> OBS
+    START["Best train.py so far"] --> EDIT["Agent edits train.py:<br/>architecture, optimizer,<br/>hyperparameters"]
+    EDIT --> TRAIN["Train for a fixed<br/>5-minute budget"]
+    TRAIN --> EVAL["Measure val_bpb<br/>lower is better"]
+    EVAL --> GATE{"Improved over best?"}
+    GATE -->|"yes"| KEEP["Keep the change<br/>as new best"]
+    GATE -->|"no"| REVERT["Discard, revert"]
+    KEEP --> START
+    REVERT --> START
       </div>
-      <div class="caption">Each layer sits at a different stage of the lifecycle: before the model sees the task, at task level, after the model acts, and after environment feedback returns. Each turns a recurring failure into a reusable intervention.</div>
+      <div class="caption">This is the universal self-improvement loop from Chapter 1, made concrete: mutate code, evaluate against one metric, gate on improvement. The judge is a single validation number the agent cannot edit.</div>
     </div>
 
-    <p>The Environment Contract Layer operates before the model acts, producing an explicit, visible contract of the rules and state so the model stops misreading them. The Procedural Skill Layer operates at the task level, supplying reusable know-how. The Action Realization Layer operates after the model proposes an action, validating it against the contract and canonicalizing it so actions that would deterministically fail are repaired. The Trajectory Regulation Layer operates after feedback returns, monitoring for and arresting trajectory degeneration on long runs.</p>
+    <p>By design, training runs for a fixed five-minute wall-clock budget regardless of your hardware, excluding startup and compilation. That choice does two things. It makes every experiment directly comparable even when the agent changes model size, batch size, or architecture, because each run gets the same time rather than the same step count. And it means autoresearch finds the most capable model your platform can produce in five minutes, rather than chasing an absolute that depends on someone else's GPU. The metric, val_bpb, is vocab-size-independent so architectural changes are scored fairly.</p>
 
-    <div class="fig" role="figure" aria-label="The evolution loop">
-      <div class="panel-eyebrow">How the harness evolves</div>
+    <div class="fig" role="figure" aria-label="Who edits what">
+      <div class="panel-eyebrow">Two levels, two editors</div>
       <div class="mermaid">
 flowchart LR
-    TRAJ["Training trajectories"] --> MINE["Mine recurring<br/>failure patterns"]
-    MINE --> CLASS["Classify into<br/>4 failure categories"]
-    CLASS --> INT["Synthesize reusable<br/>interface interventions"]
-    INT --> HARNESS["Updated harness"]
-    HARNESS --> FREEZE["Freeze for<br/>held-out evaluation"]
+    HUMAN["Human"] --> PROG["program.md<br/>research-org instructions"]
+    PROG --> AGENT["Coding agent"]
+    AGENT --> TRAIN["train.py<br/>model + training loop"]
+    TRAIN --> RESULT["val_bpb result"]
+    RESULT --> AGENT
       </div>
-      <div class="caption">Evolution happens on training trajectories only. The harness is frozen during evaluation, so the reported gains are not from adapting to the test set.</div>
+      <div class="caption">program.md is described as a lightweight skill. The human improves the instructions over time, in effect searching for the research-org code that makes progress fastest; the agent improves the model under those instructions.</div>
     </div>
 
-    <h2>Results</h2>
+    <h2>What it produces</h2>
+
+    <p>The headline number is throughput, not a benchmark score. The five-minute budget yields roughly 12 experiments per hour, so a single GPU runs about 100 experiments overnight while you sleep. autoresearch is self-contained: no distributed training, no complex configs, no external dependencies beyond PyTorch and a few small packages. One GPU, one editable file, one metric.</p>
 
     <div class="receipts">
-      <div class="receipt"><div class="num">88.5%</div><div class="label">Average relative improvement across model-environment settings, models untouched</div></div>
-      <div class="receipt"><div class="num">116 / 126</div><div class="label">Model-environment settings improved, across 18 model backbones</div></div>
-      <div class="receipt"><div class="num">4B to 17</div><div class="label">Harness evolved on one 4B model transfers to 17 others with no re-evolution</div></div>
+      <div class="receipt"><div class="num">~100</div><div class="label">Experiments an agent runs overnight on one GPU, at 12 per hour</div></div>
+      <div class="receipt"><div class="num">5 min</div><div class="label">Fixed per-experiment budget, making runs directly comparable across changes</div></div>
+      <div class="receipt"><div class="num">3 files</div><div class="label">The whole system: prepare.py (fixed), train.py (agent edits), program.md (human edits)</div></div>
     </div>
 
-    <p>The evaluation covers seven deterministic environments drawn from tau-bench, tau2-bench, and AgentBench (retail, airline, household control, and others). Because the harness is frozen at evaluation and the model weights never move, the gain is cleanly attributable to the interface interventions. Improving 116 of 126 settings means the approach helps almost everywhere, not just on a favorable subset, and the 88.5% average relative improvement is the largest harness-only result the book references.</p>
-
-    <div class="tablewrap" role="figure" aria-label="Headline outcomes">
-      <div class="panel-eyebrow">What moves, and what stays fixed</div>
-      <table>
-        <thead><tr><th>Quantity</th><th>Status</th></tr></thead>
-        <tbody>
-          <tr><td>Model weights</td><td>Frozen</td></tr>
-          <tr><td>Evaluation environment</td><td>Unchanged</td></tr>
-          <tr><td>Harness (4 lifecycle layers)</td><td class="best">Evolved on training trajectories, then frozen</td></tr>
-          <tr><td>Settings improved</td><td class="mono">116 / 126</td></tr>
-          <tr><td>Average relative gain</td><td class="mono">88.5%</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>Why interface fixes transfer</h3>
-    <p>The transfer result is the conceptual core. A harness evolved only from Qwen3-4B-Instruct trajectories, the cheapest model to iterate on, carries its gains to 17 other models without re-evolution. The reason is structural: the failures belong to the interface, not the model, so every model speaking through that interface inherits the repair. This is the cleanest statement in the literature of why the harness layer is worth evolving: you pay the evolution cost once on a small model and amortize it across a whole family.</p>
+    <p>The design choices are the lesson. A single file to modify keeps the scope manageable and the diffs reviewable. The fixed budget keeps experiments comparable and squeezes the best model out of whatever hardware you have. Self-containment keeps the whole thing on one GPU with one metric. None of this is novel machine learning; it is the disciplined minimal form of an autonomous research loop, which is exactly why it is worth studying.</p>
 
     <h2>What it changes</h2>
-    <p>LIFE-HARNESS reframes agent adaptation. The default move is to update the model (SFT, RL, distillation), which bakes domain constraints into weights and has to be redone per model. LIFE-HARNESS instead treats the failure where it actually occurs, at the interface, and produces interventions that are auditable (you can read each one), revertible, and model-agnostic. It beats a task-specific fine-tune in the paper's comparison while generalizing better out of distribution, which is the surprising part: editing the interface outperformed editing the model on its own turf.</p>
+    <p>autoresearch reframes where the human adds value in an automated research loop. The model code becomes the agent's mutable artifact; the human's lever moves up to the instructions, the program.md that defines how the research org behaves. That is the same shift the harness-evolution papers make at a different layer: stop hand-tuning the artifact, start shaping the process that tunes it. It is also the cleanest demonstration of why the fixed-budget judge matters. Because every experiment gets the same five minutes and the same vocab-independent metric, the keep-or-revert gate is trustworthy, and a trustworthy gate is what separates a loop that climbs from one that wanders.</p>
 
     <h2>Where it sits among prior work</h2>
-    <div class="tablewrap" role="figure" aria-label="Comparison with adaptation methods">
-      <div class="panel-eyebrow">Adaptation approaches compared</div>
+    <p>autoresearch is the reference point several systems in this collection build on or cite as AutoResearcher. <a href="bilevel-autoresearch.html">Bilevel Autoresearch</a> takes this exact inner loop and adds an outer loop that rewrites the search mechanism itself. Industrial efforts like Recursive's automated AI research system and Poetiq's meta-system chase the same propose-evaluate-keep pattern at company scale. What autoresearch contributes is the canonical minimal form: the smallest honest thing that is still recursive self-improvement on a real training task.</p>
+
+    <div class="tablewrap" role="figure" aria-label="autoresearch on the Chapter 1 axes">
+      <div class="panel-eyebrow">On the three axes from Chapter 1</div>
       <table>
-        <thead><tr><th>Approach</th><th>What it edits</th><th>Transfers across models?</th></tr></thead>
+        <thead><tr><th>Axis</th><th>autoresearch</th></tr></thead>
         <tbody>
-          <tr><td>SFT / RL / distillation</td><td>Model weights</td><td>No, redo per model</td></tr>
-          <tr><td>Prompt/instruction adaptation</td><td>Prompt text</td><td>Partly</td></tr>
-          <tr><td>Meta-Harness / AHE</td><td>Coding-agent harness</td><td>Some</td></tr>
-          <tr><td class="best">LIFE-HARNESS</td><td>Interface, by lifecycle layer</td><td>Yes, 4B to 17 models</td></tr>
+          <tr><td>What mutates</td><td>A training script (train.py)</td></tr>
+          <tr><td>Who judges</td><td>One validation metric (val_bpb)</td></tr>
+          <tr><td>How the gate works</td><td>Bounded: fixed budget, keep-or-revert against the best</td></tr>
         </tbody>
       </table>
     </div>
-    <p>It shares the harness-evolution philosophy of Meta-Harness and AHE but targets a different scope: the full interaction lifecycle of deterministic agents rather than coding-agent harness code specifically, organized by where in the lifecycle each failure occurs.</p>
 
     <h2>Limitations</h2>
-    <p>The environments are deterministic and rule-governed, which is exactly where interface mismatches dominate; the approach is less obviously suited to open-ended or stochastic domains where reasoning failures matter more. The 10 of 126 settings that did not improve are not deeply analyzed, so the failure conditions of the method itself are underexplored. As with the other harness papers, evolution and evaluation share the same benchmark families, so the transfer claim is across models rather than across genuinely novel task distributions. And the interventions are mined from observed failure patterns, so a failure mode absent from the training trajectories will not be covered.</p>
+    <p>This is a working demonstration and a teaching substrate, not a benchmarked research result. The task is a small single-GPU language model, so it shows the loop runs and improves, not how far autonomous research scales. The fixed-budget design makes runs comparable within one platform but not across platforms, since results depend on your specific GPU. There is no held-out generalization claim, no variance analysis, and the judge is a single metric, which inherits the usual risk that an agent optimizes the number rather than the underlying capability if the metric has a crack. And the quality of the loop still depends on the human-authored program.md, so the autonomy is real but bounded by the instructions it starts from.</p>
 
     <h2>Learnings</h2>
     <ol class="body">
-      <li><strong>Diagnose before you fix.</strong> The failure taxonomy is what makes the method work: knowing that most failures are interface mismatches, in four specific categories, tells you to evolve the harness rather than the model.</li>
-      <li><strong>Interface repairs transfer; weight edits do not.</strong> Evolving on a 4B model and transferring to 17 others is the strongest evidence in the study that the harness layer is the high-leverage, model-agnostic place to invest.</li>
-      <li><strong>Organize the harness by lifecycle.</strong> Splitting interventions into contract, skill, action-realization, and trajectory-regulation layers gives each failure category a clean home and keeps edits auditable and revertible.</li>
-      <li><strong>Editing the interface can beat fine-tuning.</strong> LIFE-HARNESS outperformed a task-specific fine-tune and generalized better, a direct rebuttal to the assumption that real adaptation must touch the weights.</li>
+      <li><strong>The minimal honest form is three files.</strong> An editable artifact, a fixed harness, and a human-authored instruction file are enough to run recursive self-improvement on a real task. Everything fancier is an addition to this skeleton.</li>
+      <li><strong>A fixed budget is what makes the gate trustworthy.</strong> Same time per run plus a vocab-independent metric means every keep-or-revert decision compares like with like, which is the whole reason the loop climbs instead of drifting.</li>
+      <li><strong>Move the human up a level.</strong> The person stops editing the model and starts editing the process. That is the same lever the harness and skill papers pull, here reduced to a single Markdown file.</li>
+      <li><strong>Throughput is the resource.</strong> ~100 overnight experiments on one GPU is the practical unlock: cheap, parallel-in-time iteration is what turns a loop into progress.</li>
     </ol>
 
     <div class="pc">
       <div class="col pros">
         <h4>Strengths</h4>
         <ul>
-          <li>Improves 116 of 126 settings across 18 backbones, an unusually broad result.</li>
-          <li>Harness evolved on one small model transfers to 17 others with no re-evolution.</li>
-          <li>Beats a task-specific fine-tune while generalizing better out of distribution.</li>
-          <li>Interventions are auditable, revertible, and organized by failure category.</li>
+          <li>The smallest runnable instance of the self-improvement loop, fully open-source and reviewable.</li>
+          <li>Fixed-budget design makes experiments directly comparable across arbitrary code changes.</li>
+          <li>Runs on a single GPU for the cost of overnight compute; ~100 experiments by morning.</li>
+          <li>Clean separation: agent edits the model, human edits the instructions.</li>
         </ul>
       </div>
       <div class="col cons">
         <h4>Open questions</h4>
         <ul>
-          <li>Scoped to deterministic, rule-governed domains; stochastic or open-ended tasks untested.</li>
-          <li>The 10 non-improving settings are not deeply analyzed.</li>
-          <li>Evolution and evaluation share benchmark families; no novel-distribution test.</li>
-          <li>Only failure modes present in training trajectories get covered.</li>
+          <li>A demonstration on a small model, not a benchmarked or scaled research result.</li>
+          <li>Results are not comparable across hardware platforms by design.</li>
+          <li>Single-metric judge inherits the usual reward-hacking risk if the metric is exploitable.</li>
+          <li>Loop quality still depends on the human-written program.md it starts from.</li>
         </ul>
       </div>
     </div>
@@ -387,12 +373,12 @@ flowchart LR
       <table>
         <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
         <tbody>
-          <tr><td class="mono">Runtime harness</td><td>The code mediating observation, tool use, action execution, feedback, and trajectory control</td></tr>
-          <tr><td class="mono">Environment contract</td><td>The explicit statement of rules and state the agent must obey</td></tr>
-          <tr><td class="mono">Action realization</td><td>Turning the model's intended action into one valid under the contract</td></tr>
-          <tr><td class="mono">Trajectory regulation</td><td>Monitoring a multi-step run for degeneration and arresting it</td></tr>
-          <tr><td class="mono">Deterministic environment</td><td>A rule-governed setting where the same action always yields the same result</td></tr>
-          <tr><td class="mono">Relative improvement</td><td>Gain measured relative to the unaided agent's score, not an absolute pp difference</td></tr>
+          <tr><td class="mono">program.md</td><td>The Markdown instructions defining the research org; the human's editable file</td></tr>
+          <tr><td class="mono">train.py</td><td>The single file holding the model, optimizer, and loop; the agent's editable file</td></tr>
+          <tr><td class="mono">val_bpb</td><td>Validation bits per byte: the metric, lower is better, vocab-size-independent</td></tr>
+          <tr><td class="mono">Fixed budget</td><td>Every run trains for the same five minutes of wall clock, not the same step count</td></tr>
+          <tr><td class="mono">nanochat</td><td>The parent training codebase this single-GPU setup simplifies</td></tr>
+          <tr><td class="mono">Keep-or-revert</td><td>The gate: accept a change only if val_bpb improves, otherwise discard it</td></tr>
         </tbody>
       </table>
     </div>
@@ -400,8 +386,8 @@ flowchart LR
     <div class="refs" id="refs">
       <h2>Source</h2>
       <ul>
-        <li>Xu, Wen, Li, Adapting the Interface, Not the Model: Runtime Harness Adaptation for Deterministic LLM Agents (LIFE-HARNESS), Peking University (2026) · <a href="https://arxiv.org/abs/2605.22166">arxiv.org/abs/2605.22166</a></li>
-        <li>Local copy · <code class="inline">papers/Adapting the Interface, Not the Model- Runtime Harness Adaptation for Deterministic LLM Agents.pdf</code></li>
+        <li>Andrej Karpathy, autoresearch (2026) · <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
+        <li>Built on nanochat · <a href="https://github.com/karpathy/nanochat">github.com/karpathy/nanochat</a></li>
       </ul>
     </div>
   </article>
