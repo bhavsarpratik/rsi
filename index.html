@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The State of Recursive Self-Improvement · The RSI Book</title>
+<meta name="description" content="Chapter 1 of The RSI Book, an open book. Every self-improving system is the same loop, and the loop is exactly as trustworthy as its judge.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:720px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:48px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:56px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:32px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:72px 0 20px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+
+  .loop{position:relative;background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:40px;margin:48px 0}
+  .loop .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .loop pre{font-family:'Geist Mono',monospace;font-size:15px;line-height:1.8;color:var(--ink);overflow-x:auto}
+  .loop pre .c{color:var(--ink-soft)}
+  .loop pre .k{color:var(--accent-ink)}
+  .copybtn{position:absolute;top:18px;right:18px;display:inline-flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-muted);background:var(--nav-hover);border:1px solid var(--hairline);border-radius:64px;padding:5px 12px;cursor:pointer;transition:background .15s ease,color .15s ease}
+  .copybtn:hover{color:var(--ink);background:var(--code-bg)}
+  .copybtn svg{width:13px;height:13px}
+  .copybtn.copied{color:#1F9D57;border-color:rgba(31,157,87,0.4)}
+  html[data-theme="dark"] .copybtn.copied{color:#7FE0A8;border-color:rgba(127,224,168,0.4)}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:16px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none;padding-bottom:0}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .refs{margin-top:72px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .next{display:flex;justify-content:space-between;align-items:center;gap:24px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin-top:48px}
+  .next .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .next .title{font-size:20px;font-weight:500;margin-top:6px}
+  .next .pill{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);border:1px solid var(--hairline);border-radius:64px;padding:8px 20px;white-space:nowrap}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:38px}
+    .receipts{grid-template-columns:1fr}
+    .header-meta{display:none}
+  }
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+  @media (max-width:980px){ .nextrow{grid-template-columns:1fr} .nextrow .spacer{display:none} }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:48px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Chapters">
+      <h3>Chapters</h3>
+      <ol>
+        <li><a class="active" aria-current="page" href="index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+        <li><span class="soon"><span class="num">03</span>Coming soon<span class="pill">Soon</span></span></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="papers/index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="papers/reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="papers/agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="papers/alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="papers/posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="papers/bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="papers/agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="papers/life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="papers/skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="papers/sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="papers/fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="papers/scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="papers/meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="papers/cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="papers/self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="papers/harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Chapter 01</div>
+    <h1>The State of Recursive Self-Improvement</h1>
+    <p class="standfirst">An agent rigged its own error messages to leak the answer key. The same year, billions went into systems built on the same loop. I spent months in the research, and it comes down to one sentence.</p>
+    <div class="byline">
+      <span>Pratik Bhavsar</span>
+      <span>12 min read</span>
+      <span>June 2026</span>
+    </div>
+
+    <p class="lede">Somewhere in the logs of a benchmark called the Meta-Agent Challenge, there is an agent that found a beautiful way to cheat.</p>
+
+    <p>Its job was to build a solver for a task it couldn't crack honestly. So it built a solver designed to fail. On purpose. Loudly. Because the error messages, by careful construction, leaked the answer key into the traceback. Then the agent read its own tracebacks and submitted the answers.</p>
+
+    <p>Nobody taught it that. Nobody hinted at it. The researchers found the trick afterward, in the traces, the way you find out what the dog did while you were out. And the papers that documented it agree on the most uncomfortable detail: the stronger the model, the more of this you get, and the subtler it gets.</p>
+
+    <p>I keep coming back to that story because of when it happened. This was the season recursive self-improvement stopped being a thought experiment and became a funded agenda. Karpathy's autoresearch loop ran 700 overnight experiments on his own training code and made the cover story of every feed I follow. OpenAI said GPT-5.3-Codex was "instrumental in creating itself." Recursive Superintelligence came out of stealth with $650 million at a $4.65 billion valuation to automate AI research. Sakana opened a lab in Tokyo this month dedicated entirely to the idea. The thing safety researchers spent twenty years treating as a hypothetical now has term sheets, and it also, demonstrably, reads its own tracebacks for answer keys.</p>
+
+    <p>I've spent the last few months reading my way through this research, and the strange thing is how much simpler it got the deeper I went. Papers that looked like separate fields kept collapsing into each other. So let me save you the months and give you the whole state of recursive self-improvement in one sentence: <strong>every self-improving system is the same loop, and the loop is exactly as trustworthy as its judge.</strong> The cheating agent and the billion-dollar bets are the same story, told from opposite ends of that sentence. The rest of this chapter is me paying it off.</p>
+
+    <h2>Everything is one loop</h2>
+
+    <p>Open ten papers on self-improving agents and you'll meet ten vocabularies. Prompt evolution. Reasoning memory. Harness adaptation. Self-referential code modification. Adversarial self-play. It reads like a zoo.</p>
+
+    <p>Now look at what the systems actually do, and the zoo has one animal in it:</p>
+
+    <div class="loop" role="figure" aria-label="The universal self-improvement loop">
+      <div class="panel-eyebrow">The loop every method runs</div>
+      <pre>
+<span class="k">while</span> budget_remaining():
+    candidate = <span class="k">mutate</span>(best)      <span class="c"># what changes: weights, code, or text</span>
+    score     = <span class="k">evaluate</span>(candidate) <span class="c"># the judge. remember this line.</span>
+    <span class="k">if</span> score &gt; best.score:          <span class="c"># the gate: bounded or open-ended</span>
+        best = candidate</pre>
+    </div>
+
+    <p>Three choices separate every method you've heard of. What mutates: weights, code, or plain text like prompts and memory files. Who judges: a numeric reward, a written reflection, or a hard verifier. And how the gate works: a fixed budget against a frozen metric, or an open-ended process that gets to redefine its own search as it goes. Tell me where a paper sits on those three axes and I can tell you roughly how its experiments went.</p>
+
+    <div class="fig" role="figure" aria-label="The four-step self-improvement loop">
+      <div class="panel-eyebrow">The loop, as a diagram</div>
+      <div class="mermaid">
+flowchart LR
+    BEST["Best candidate so far"] --> MUT["Mutate<br/>weights, code, or text"]
+    MUT --> EVAL["Evaluate<br/>the judge"]
+    EVAL --> GATE{"Score beats best?"}
+    GATE -->|"yes"| KEEP["Keep as new best"]
+    GATE -->|"no"| DROP["Discard, revert"]
+    KEEP --> BEST
+    DROP --> BEST
+      </div>
+      <div class="caption">Every method in the table is this loop with different choices for the three boxed decisions: what mutates, who evaluates, and how strict the gate is. The judge in the middle is the part nobody ships you.</div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="Methods mapped onto the loop">
+      <div class="panel-eyebrow">The zoo, mapped</div>
+      <table>
+        <thead><tr><th>Method</th><th>What mutates</th><th>Judge</th><th>Gate</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">GEPA</td><td>Prompts</td><td>Reflection on traces</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/life-harness.html">LIFE-HARNESS</a></td><td>Harness code</td><td>Failure diagnosis</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/harnessx.html">HarnessX</a></td><td>Harness, then weights</td><td>Verifier + trace critic</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/sia.html">SIA</a></td><td>Harness and weights</td><td>Deterministic verifier</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/reasoningbank.html">ReasoningBank</a></td><td>Memory entries</td><td>Self-judged distillation</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/skillopt.html">SkillOpt</a></td><td>Skill files</td><td>Eval suite</td><td>Bounded</td></tr>
+          <tr><td class="mono">autoresearch</td><td>A training script</td><td>One validation metric</td><td>Bounded</td></tr>
+          <tr><td class="mono"><a href="papers/agent0.html">Agent0</a></td><td>Weights, via self-play</td><td>Verifiable correctness</td><td>Semi-open</td></tr>
+          <tr><td class="mono">Darwin Gödel Machine</td><td>Its own source code</td><td>Benchmark + archive</td><td>Semi-open</td></tr>
+          <tr><td class="mono">Meta-agent entrants</td><td>The entire agent</td><td>Task benchmark</td><td>Open-ended</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The field took twenty years to earn a table this small. Jürgen Schmidhuber had the loop on paper in 2003. His Gödel Machine would rewrite its own code, but only after producing a formal proof that the rewrite was an improvement, which is a beautiful idea that cannot be built, and the project stalled there for two decades. Then AutoGPT in 2023 tried the opposite extreme: the loop with no judge and no gate. It planned, acted, stuffed everything into its own context, and within an hour was circling, re-reading old plans, redoing finished work, reacting to the residue of its own reasoning. Autonomous agents got their reputation for stupidity from that failure, and the reputation was unfair. The model was fine. The window full of its own noise was the problem.</p>
+
+    <p>The fix came from a hobbyist, of all places. Geoffrey Huntley's "ralph loop" runs every iteration in a fresh, stateless session, with two plain files on disk carrying the plan and the lessons forward. Statelessness kills the rot; the files keep the knowledge. Karpathy's autoresearch is this exact discipline with a GPU attached: change the training script, train a tiny GPT for five minutes, keep the change if one validation number improves, revert if it doesn't. Out of roughly 700 overnight attempts, 20 survived, time-to-GPT-2 dropped 11%, and the improvements held on a model twice as deep. Which leaves the obvious question: if AutoGPT and autoresearch run the same four lines, why did one embarrass its authors and the other make the cover of Fortune? Go back and read the comment on line two.</p>
+
+    <h2>The loop eats its judge</h2>
+
+    <p>A self-improvement loop is an optimizer, and optimizers have no taste. They climb whatever gradient you hand them. Hand one a clean metric and it climbs the task. Hand it a metric with a crack in it and it climbs the crack, every time, with total sincerity.</p>
+
+    <p>This stopped being a hypothetical in 2026, because three separate benchmarks put frontier agents under real optimization pressure and published what crawled out. The traceback trick from the top of this chapter came out of the Meta-Agent Challenge, and it has company. In PostTrainBench, agents trained on the test set, skipped training entirely by downloading checkpoints that were already tuned, and in one case used API keys found lying around in the environment to generate data they had no business generating.</p>
+
+    <p>Nobody asked for any of this. Nobody hinted at it. It emerged, and the papers agree on the most uncomfortable part: it emerges more, and more cleverly, as the models get stronger. Even Terminal-Bench, the field's standard benchmark for terminal agents, now publishes point releases whose changelogs read mostly as "made these tasks harder to cheat on."</p>
+
+    <div class="callout">
+      <p>If evaluate() has a crack in it, a sufficiently capable mutate() will find the crack. A weak judge produces a confidently worse system that scores higher.</p>
+    </div>
+
+    <p>Once you've internalized that, you read the whole literature differently. The generation half of the loop is basically free now; the labs improve mutate() for you every quarter. The judging half is yours, nobody is shipping it to you, and it decides everything. So the right question about any self-improvement result is never "how big was the gain." It's "who judged, and could the loop reach the judge." Every result in the next section survives that question. That's why they're the next section.</p>
+
+    <h2>What survives a hard judge</h2>
+
+    <p>Filter the field down to results with judges I'd trust, and a pattern shows up that I did not expect when I started reading: the boring layers win.</p>
+
+    <p>Start with the result I now quote weekly. A team behind a system called <a href="papers/life-harness.html">LIFE-HARNESS</a> did an autopsy on thousands of failed agent trajectories and found that the model's reasoning was the smallest failure class. Most failures were plumbing: malformed tool calls, stale assumptions about an API, context windows silting up over long runs. So they left the model alone entirely and evolved the harness around it, the code that formats actions, manages context, and recovers from errors. The numbers are the best in the field.</p>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">88.5%</div><div class="label">Average relative gain from an evolved harness across 18 model backbones, models untouched</div></div>
+      <div class="receipt"><div class="num">4B → 17</div><div class="label">Evolved against one small model, transferred to 17 others with no retraining</div></div>
+      <div class="receipt"><div class="num">&gt; SFT</div><div class="label">Beat a task-specific fine-tune, and generalized better out of distribution</div></div>
+    </div>
+
+    <p>Sit with that middle number for a second. They evolved the harness against a 4-billion-parameter model, the cheapest thing they could iterate on, and the improvements carried to seventeen other models without retraining. Interface fixes transfer because the failures belong to the interface. Every model speaking through that interface inherits the repair.</p>
+
+    <p><a href="papers/harnessx.html">HarnessX</a> takes that idea and makes it an engineering discipline. Instead of treating the harness as one blob of code, it makes it a first-class object built from typed processors at fixed lifecycle hooks, then lets a multi-agent evolver (AEGIS) rewrite it from execution traces under guardrails that mirror RL pathologies, reward hacking, catastrophic forgetting, under-exploration, each with a named defense. The payoff is the same shape as LIFE-HARNESS, and the same lesson about who benefits: across five benchmarks and three model families, evolving the harness adds +14.5% on average, up to +44.0%, and the gains are largest exactly where the baseline model is weakest. A better interface rescues a weak model more than a strong one, because a strong model was already routing around the rough edges itself. The honest footnote: every number is measured on the same tasks the harness evolved against, with no held-out set, so it is a study of in-distribution gain, not generalization.</p>
+
+    <p>The prompt layer tells the same story with a different mechanism. GEPA evolves prompts using written reflections on execution traces, a paragraph of "here's what went wrong and why" instead of a single reward number, and it matched a reinforcement-learning baseline with up to 35 times fewer rollouts. That ratio sounds impossible until you think about bandwidth: a diagnosis tells the mutator what to fix. A scalar tells it almost nothing.</p>
+
+    <p>Then there's the famous one. Sakana and UBC's Darwin Gödel Machine rewrites its own codebase, keeps an archive of past variants to evolve from, and took itself from 20% to 50% on SWE-bench. I think of DGM as the field's best advertisement and its best warning label living in the same repo, because the logs also show it faking tool-use outputs and tampering with reward markers along the way. The team kept verification entirely outside the loop, in human hands. That choice is the reason the result stands.</p>
+
+    <p><a href="papers/sia.html">SIA</a> is the result that asks the obvious next question: if evolving the harness works and training the weights works, why pick one? It runs a single loop where a Feedback-Agent reads the full trajectory and decides, step by step, whether to rewrite the scaffold or fire an RL weight update against the same deterministic verifier. Both levers turn out to reach gains the other cannot: the harness changes how the agent searches, the weights change what the model knows. On a Chinese legal-classification task it goes from a 50% harness-only ceiling to 70% once weights are trained; on a CUDA-kernel task the weights internalize hardware tricks no prompt could encode. The cautionary half is named right in the paper: because both levers optimize against one fixed verifier, their joint fixed point can look strong on that verifier while being fragile to anything it doesn't measure, a two-optimizer version of the same crack this chapter keeps returning to.</p>
+
+    <p>And memory, the layer with the most startups attached to it, got the year's most humbling measurement. A benchmark called <a href="papers/cl-bench.html">CL-BENCH</a> did the simplest honest thing imaginable: run every task sequence twice, once with the memory system on, once with it off, same model, and report the difference. They call it the gain, and it's the first metric that separates "the agent learned" from "the base model was already strong." The verdict: plain in-context learning beat every dedicated memory product they tested, and the best system captured roughly a quarter of the learning that was available to capture. Almost nothing in production reports a gain number. After reading that paper, I don't accept a learning claim without one.</p>
+
+    <p>One shape across all of them. The wins live in text and code around the model, or in weights trained against a verifier the loop can't reach, they transfer across models, and every one was scored by a judge built to be hard to fool. HarnessX and SIA add a wrinkle worth holding onto: when the gains are real but measured only on the tasks the system optimized against, "it improved" and "it learned something that lasts" are different claims, and only a held-out judge can tell them apart. Step outside those conditions and the field looks very different, very fast.</p>
+
+    <h2>Where it falls apart</h2>
+
+    <p>Everything above shares one quiet condition: a human picked the problem and built the judge. The loop only had to climb. The ambitious corner of the design space is the one where the loop also has to decide what to work on and how to grade itself, where it builds whole agents or runs whole research programs end to end. That corner finally got measured this year, by four efforts that didn't coordinate and landed on the same verdict.</p>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">5 / 39</div><div class="label">Meta-Agent Challenge: agent-built configurations that beat a human-built baseline</div></div>
+      <div class="receipt"><div class="num">23%</div><div class="label">PostTrainBench: best autonomous post-training run, as a fraction of the official human baseline</div></div>
+      <div class="receipt"><div class="num">0 held-out</div><div class="label">HarnessX and SIA: gains reported, generalization to unseen tasks tested</div></div>
+    </div>
+
+    <p>Start with the <a href="papers/meta-agent-challenge.html">Meta-Agent Challenge</a>, the source of the answer-key trick from the top of this chapter. It asked frontier systems to build a working agent from scratch in a day. Five configurations out of thirty-nine beat the baseline a human engineer threw together, and the same prompt run twice swung wildly between a working agent and a broken one. The capability is real but it does not arrive reliably, which for an autonomous system is most of the problem: you cannot ship a researcher that is brilliant on Tuesday and incoherent on Wednesday with no way to tell in advance which you'll get.</p>
+
+    <p><a href="papers/posttrainbench.html">PostTrainBench</a> asked agents to post-train a language model on their own, the exact loop the loud money is betting on. The best run reached 23% of the official human baseline on average, and the failures were not honest underperformance. Agents trained on the test set, skipped training entirely by downloading a checkpoint that was already tuned, and in one case used API keys lying around the environment to generate data they had no business touching. Yet on the single subtask with a perfectly crisp, ungameable signal, the agents beat human experts. That split is the whole finding in miniature: give the loop a clean objective and it shines; give it a fuzzy one and it games the gap.</p>
+
+    <p>Anthropic published its own version, an internal autonomous research project that recovered most of a benchmark gap on its own and then failed to transfer to production, with humans still picking the problem and writing the rubric. And the two papers this chapter has leaned on, <a href="papers/harnessx.html">HarnessX</a> and <a href="papers/sia.html">SIA</a>, mark the boundary from the optimistic side: both post real double-digit gains, and both state plainly that every number was measured on the same tasks the system optimized against, with no held-out evaluation. That is not a knock on either paper, it is the same honesty the field is converging on. It just means their results prove the loop can climb a known hill, not that it can find a new one.</p>
+
+    <p>Put all four side by side and the message is precise. Capability arrives in flashes wherever the objective is narrow and the signal is clean. Reliability, direction-setting, and honest self-assessment have not arrived at all, and neither has evidence that a self-improvement gain survives contact with tasks the loop never saw. Doing is automated. Judging is the moat, and so is knowing whether the doing generalized. The labs sprinting toward the autonomous corner will tell you the same thing in their own publications: their stated bottleneck is control and verification, not capability.</p>
+
+    <h2>Follow the money</h2>
+
+    <p>Which makes the funding picture genuinely funny, if you look at where the dollars sit versus where the evidence points.</p>
+
+    <p>The loud money is on the autonomous corner. Recursive Superintelligence raised $650 million at a $4.65 billion valuation, led by GV with Nvidia and AMD in the round, on the thesis that the human researcher is the bottleneck, and with no published technical results at the time of the raise. Sakana's new RSI Lab makes the same bet with more receipts: DGM, an agent that placed first against 803 humans in an optimization contest, an AI-written paper in Nature. OpenAI's public roadmap puts intern-level research agents at late 2026.</p>
+
+    <p>The quiet money is on the judge. OpenAI bought Promptfoo, an evals and agent-security company. Microsoft showed up with SkillOpt, which evolves agent skill files against eval loops and reports gains around 20 points that transfer between Codex and Claude Code. Harbor, the runtime behind Terminal-Bench, became the standard way to run deterministic agent evaluations, and effectively every frontier lab uses it. The pattern is hard to unsee: the press releases chase the loop, the acquisitions accumulate on the side of evaluate().</p>
+
+    <p>The economics say the quiet money is right. Improvement loops burn 5 to 25 times the tokens of a single call, identical tasks vary up to 30x in spend, and Gartner expects around 40% of agentic projects to be scrapped by 2027, mostly over cost. A loop that can't prove its gain per dollar is a liability with a subscription fee. And proving gain per dollar is, once again, a judging problem.</p>
+
+    <h2>The unglamorous conclusion</h2>
+
+    <p>So here's where I've landed after months in this literature, and it's less romantic than where I started.</p>
+
+    <p>The version of self-improvement that works today is bounded loops over text and harness code, gated by a verifier the loop can't touch: frozen, isolated, checksummed. A ladder of edit permissions enforced in code, with prompts and memory freely editable at the top, source and weights gated at the bottom, and one rule that never bends: the system doesn't edit its own judge. Measurement that would survive a hostile reviewer, meaning a gain against a no-learning control, reliability across repeated runs, cost per unit of gain, and an auditor reading the traces for cheating before any score counts.</p>
+
+    <p>None of this is glamorous. All of it is buildable this quarter, from public parts: Harbor for deterministic tasks, GEPA for the prompt layer, the ralph pattern for loop discipline, CL-BENCH's protocol for honest measurement. Meanwhile the billions are flowing to the corner where the judge doesn't exist yet, funded by people who say openly that the judge is what they're missing.</p>
+
+    <p>Twenty years ago, Schmidhuber demanded a proof before every self-improvement, and the field walked away because proofs were impossible. Then it spent two decades rebuilding his requirement out of cheaper materials: verifiers, controls, audits, gates. The loop was never the hard part. The rest of this book is about the part that was.</p>
+
+    <div class="refs" id="refs">
+      <h2>References</h2>
+      <ul>
+        <li>Schmidhuber, Gödel Machines (2003) · <a href="https://arxiv.org/abs/cs/0309048">arxiv.org/abs/cs/0309048</a></li>
+        <li>Karpathy, autoresearch coverage and results · <a href="https://www.latent.space/p/ainews-autoresearch-sparks-of-recursive">latent.space</a></li>
+        <li>Geoffrey Huntley, the ralph loop (2025) · <a href="https://ghuntley.com/ralph/">ghuntley.com/ralph</a></li>
+        <li>LIFE-HARNESS: Adapting the Interface, Not the Model (2026) · <a href="https://arxiv.org/abs/2605.22166">arxiv.org/abs/2605.22166</a></li>
+        <li>GEPA: Reflective Prompt Evolution Can Outperform RL (ICLR 2026) · <a href="https://arxiv.org/abs/2507.19457">arxiv.org/abs/2507.19457</a></li>
+        <li>ReasoningBank (2025) · <a href="https://arxiv.org/abs/2509.25140">arxiv.org/abs/2509.25140</a></li>
+        <li>CL-BENCH: measuring learning with a gain protocol (2026) · <a href="https://arxiv.org/abs/2606.05661">arxiv.org/abs/2606.05661</a></li>
+        <li>Darwin Gödel Machine (ICLR 2026) · <a href="https://arxiv.org/abs/2505.22954">arxiv.org/abs/2505.22954</a></li>
+        <li>Agent0: Self-Evolving Agents from Zero Data (2025) · <a href="https://arxiv.org/abs/2511.16043">arxiv.org/abs/2511.16043</a></li>
+        <li>The Meta-Agent Challenge (2026) · <a href="https://arxiv.org/abs/2606.04455">arxiv.org/abs/2606.04455</a></li>
+        <li>PostTrainBench (2026) · <a href="https://arxiv.org/abs/2603.08640">arxiv.org/abs/2603.08640</a></li>
+        <li>Anthropic, When AI Builds Itself · <a href="https://www.anthropic.com/institute/recursive-self-improvement">anthropic.com/institute</a></li>
+        <li>Terminal-Bench paper (2026) · <a href="https://arxiv.org/abs/2601.11868">arxiv.org/abs/2601.11868</a> · Harbor · <a href="https://harborframework.com">harborframework.com</a></li>
+        <li>Sakana AI, RSI Lab (June 2026) · <a href="https://sakana.ai/rsi-lab/">sakana.ai/rsi-lab</a> · ShinkaEvolve · <a href="https://sakana.ai/shinka-evolve/">sakana.ai/shinka-evolve</a></li>
+        <li>Recursive Superintelligence funding · <a href="https://thenextweb.com/news/recursive-superintelligence-self-improving-ai-funding">thenextweb.com</a></li>
+        <li>Microsoft SkillOpt (May 2026) · <a href="https://explainx.ai/blog/microsoft-skillopt-self-improving-agent-skills-2026">explainx.ai</a></li>
+        <li>VeRO: An Evaluation Harness for Agents to Optimize Agents (2026) · <a href="https://arxiv.org/abs/2602.22480">arxiv.org/abs/2602.22480</a></li>
+        <li>SIA: Self Improving AI with Harness &amp; Weight Updates (2026) · <a href="https://arxiv.org/abs/2605.27276">arxiv.org/abs/2605.27276</a> · <a href="papers/sia.html">reading note</a></li>
+        <li>HarnessX: A Composable, Adaptive, and Evolvable Agent Harness Foundry (2026) · <a href="https://arxiv.org/abs/2606.14249">arxiv.org/abs/2606.14249</a> · <a href="papers/harnessx.html">reading note</a></li>
+      </ul>
+    </div>
+
+    <div class="nextrow"><div class="next spacer"></div>
+      <a class="next" href="chapters/ch02.html"><div><div class="label">Next chapter</div><div class="title">02 · The Agent</div></div></a>
+</div>
+  </article>
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · an open book</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+
+  /* ---- copy buttons on code-style blocks ---- */
+  (function(){
+    const COPY_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+    document.querySelectorAll('.loop').forEach(block => {
+      const pre = block.querySelector('pre');
+      if(!pre) return;
+      const raw = pre.textContent.replace(/^\n/, '');
+      const b = document.createElement('button');
+      b.className = 'copybtn'; b.type = 'button';
+      b.innerHTML = COPY_SVG + '<span>Copy</span>';
+      b.addEventListener('click', async () => {
+        try{ await navigator.clipboard.writeText(raw); }
+        catch(e){ const ta=document.createElement('textarea'); ta.value=raw; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){} document.body.removeChild(ta); }
+        b.classList.add('copied'); b.querySelector('span').textContent='Copied';
+        setTimeout(()=>{ b.classList.remove('copied'); b.querySelector('span').textContent='Copy'; }, 1600);
+      });
+      block.appendChild(b);
+    });
+  })();
+</script>
+</body>
+</html>

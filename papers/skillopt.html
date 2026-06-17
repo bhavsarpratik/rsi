@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillOpt: Executive Strategy for Self-Evolving Agent Skills · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on SkillOpt, a controllable text-space optimizer that trains agent skill documents with optimizer-style discipline.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a class="active" href="skillopt.html" aria-current="page"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Paper Deep-Dive</div>
+    <h1>SkillOpt: Executive Strategy for Self-Evolving Agent Skills</h1>
+    <p class="standfirst">Treat a skill document like a parameter and train it with the discipline of a real optimizer: scored rollouts become bounded edits, a learning-rate budget controls step size, and a held-out gate accepts only edits that strictly improve.</p>
+    <div class="byline">
+      <span>Yang, Gong, Huang et al. · Microsoft, SJTU, Tongji, Fudan</span>
+      <span>arXiv:2605.23904</span>
+      <span>May 2026</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>Authors</dt><dd>Yifan Yang, Ziyang Gong, Weiquan Huang, Qihao Yang and colleagues (Microsoft with SJTU, Tongji, Fudan)</dd>
+        <dt>Target models</dt><dd>Seven, including GPT-5.5; optimizer is a separate frontier model</dd>
+        <dt>Harnesses</dt><dd>Direct chat, Codex, Claude Code (three execution environments)</dd>
+        <dt>Tags</dt><dd>Agent skills · text-space optimization · self-evolving · domain adaptation · transfer</dd>
+      </dl>
+    </div>
+
+    <p class="lede">Agent skills today are hand-crafted, generated one-shot, or evolved by loosely controlled self-revision, and none of those behaves like an optimizer: none reliably improves over its starting point under feedback. SkillOpt argues the skill should be trained as the external state of a frozen agent, with the same discipline that makes weight-space optimization reproducible. A separate optimizer model turns scored rollouts into bounded add, delete, or replace edits on a single skill document, and an edit is accepted only when it strictly improves a held-out validation score.</p>
+
+    <p>The training-style controls (a textual learning-rate budget, a rejected-edit buffer, an epoch-wise slow/meta update) make skill training stable while adding zero extra inference-time model calls at deployment. Across six benchmarks, seven target models, and three execution harnesses, SkillOpt is best or tied on all 52 evaluated cells, and on GPT-5.5 it lifts no-skill accuracy by +23.5 points in direct chat, +24.8 inside Codex, and +19.1 inside Claude Code.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>If the recurring object of adaptation is the agent's procedure, then the skill document is the thing to improve, but the existing ways of producing skills do not optimize in any rigorous sense. Hand-crafting does not learn; one-shot generation does not iterate; and loosely controlled self-revision drifts, because consecutive revisions can move so far apart that the optimizer loses the history of what helped and what failed. The missing ingredient is the discipline of weight-space training: bounded steps, a validation gate, and a stable trajectory of updates that later steps can learn from.</p>
+
+    <div class="callout">
+      <p>A skill document is a parameter you can train. Give text-space editing the controls that make gradient descent reproducible (bounded steps, held-out validation, momentum) and the skill reliably improves instead of drifting.</p>
+    </div>
+
+    <h2>How it works</h2>
+
+    <p>SkillOpt maps each piece of an optimizer onto a text-space analogue. The parameter is the skill document. The gradient is trajectory-derived evidence from scored rollouts. The learning rate is an edit budget that bounds how much the document can change per step. Validation is a held-out selection split. And the update direction is carried across epochs by a slow/meta update that behaves like momentum.</p>
+
+    <div class="tablewrap" role="figure" aria-label="The optimizer analogy">
+      <div class="panel-eyebrow">Weight-space optimizer to text-space optimizer</div>
+      <table>
+        <thead><tr><th>Optimizer concept</th><th>SkillOpt analogue</th></tr></thead>
+        <tbody>
+          <tr><td>Parameter</td><td>The skill document</td></tr>
+          <tr><td>Gradient</td><td>Trajectory-derived evidence from scored rollouts</td></tr>
+          <tr><td>Learning rate</td><td>Textual edit budget (how much the document can change)</td></tr>
+          <tr><td>Validation</td><td>Held-out selection split that gates each edit</td></tr>
+          <tr><td>Momentum</td><td>Epoch-wise slow/meta update carrying stable directions</td></tr>
+          <tr><td>Negative examples</td><td>Rejected-edit buffer retained as feedback</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fig" role="figure" aria-label="The SkillOpt training loop">
+      <div class="panel-eyebrow">The skill-training loop</div>
+      <div class="mermaid">
+flowchart TD
+    SKILL["Current skill document"] --> ROLL["Run rollout batch,<br/>score successes and failures"]
+    ROLL --> OPT["Optimizer model proposes<br/>add / delete / replace edits"]
+    OPT --> BUDGET["Rank and bound edits<br/>under learning-rate budget"]
+    BUDGET --> CAND["Candidate skill document"]
+    CAND --> GATE{"Strictly improves<br/>held-out validation?"}
+    GATE -->|"yes"| ACCEPT["Accept, update skill"]
+    GATE -->|"no"| REJECT["Reject, store in buffer"]
+    ACCEPT --> SKILL
+    REJECT --> SKILL
+      </div>
+      <div class="caption">A separate optimizer model does the editing; the target agent stays frozen. Only edits that strictly improve validation are kept, which is what stops the document from drifting.</div>
+    </div>
+
+    <p>The pieces have direct training roles. Rollout-batch and reflection-minibatch sizes control how much noise feeds each edit. The textual learning rate and its schedule control step size over time. The held-out split plays the role of validation, accepting an edit only on a strict improvement. The rejected-edit buffer keeps failed edits as negative feedback so the optimizer does not retry them. And the slow/meta update preserves longer-horizon regularities across epochs. Together these keep each revision close enough to the last that the optimizer accumulates a meaningful optimization history.</p>
+
+    <div class="fig" role="figure" aria-label="Why stability matters">
+      <div class="panel-eyebrow">Bounded updates preserve history</div>
+      <div class="mermaid">
+flowchart LR
+    UNBOUNDED["Loose self-revision:<br/>big jumps between versions"] --> LOST["History lost,<br/>no optimization signal"]
+    BOUNDED["SkillOpt: bounded,<br/>validation-gated edits"] --> KEPT["Each revision near the last,<br/>optimizer learns from history"]
+      </div>
+      <div class="caption">The stability argument: if consecutive skill versions move too far apart, later optimizer calls cannot learn what helped. Bounded, gated updates keep the trajectory legible.</div>
+    </div>
+
+    <h2>Results</h2>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">52 / 52</div><div class="label">(model, benchmark, harness) cells where SkillOpt is best or tied-best</div></div>
+      <div class="receipt"><div class="num">+24.8 pts</div><div class="label">GPT-5.5 gain over no-skill inside the Codex agentic loop</div></div>
+      <div class="receipt"><div class="num">0</div><div class="label">Extra inference-time model calls added at deployment</div></div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="GPT-5.5 gains by harness">
+      <div class="panel-eyebrow">GPT-5.5 gain over no-skill, by execution harness</div>
+      <table>
+        <thead><tr><th>Harness</th><th>Gain over no-skill</th></tr></thead>
+        <tbody>
+          <tr><td>Direct chat</td><td class="mono">+23.5</td></tr>
+          <tr><td>Codex agentic loop</td><td class="mono best">+24.8</td></tr>
+          <tr><td>Claude Code</td><td class="mono">+19.1</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The comparison set is strong: SkillOpt beats every per-cell competitor among human-written skills, one-shot LLM skills, Trace2Skill, TextGrad, GEPA, and EvoSkill, and being best-or-tied on all 52 cells means it does not win only on a favorable subset. Because the trained skill is just a document loaded at deployment, the gains come with no extra model calls at inference, unlike methods that spend test-time compute.</p>
+
+    <h3>Optimized skills transfer</h3>
+    <p>The transfer experiments are the part that matters for reuse. An optimized skill artifact retains value when moved across model scales, between the Codex and Claude Code execution environments, and to a nearby math benchmark, all without further optimization. That mirrors the harness-transfer story from LIFE-HARNESS and AHE: a well-trained text artifact captures domain procedure that is not tied to the specific model or harness it was trained on.</p>
+
+    <h2>What it changes</h2>
+    <p>SkillOpt's contribution is importing optimizer discipline into text-space adaptation. Prior skill-evolution methods edit freely and hope the result improves; SkillOpt makes every edit bounded, validation-gated, and recorded, so the process has the reproducibility properties of training rather than the drift of self-revision. The ablations confirm each control earns its place: the held-out gate prevents accepting edits that only look good on the training rollouts, the rejected-edit buffer stops the optimizer relitigating failed edits, and the slow/meta update improves long-horizon refinement without bloating the deployed skill.</p>
+
+    <h2>Where it sits among prior work</h2>
+    <div class="tablewrap" role="figure" aria-label="Comparison with skill methods">
+      <div class="panel-eyebrow">Skill production compared</div>
+      <table>
+        <thead><tr><th>Method</th><th>How the skill is produced</th><th>Validation-gated?</th></tr></thead>
+        <tbody>
+          <tr><td>Human-written</td><td>Hand-crafted</td><td>No</td></tr>
+          <tr><td>One-shot LLM</td><td>Generated once</td><td>No</td></tr>
+          <tr><td>TextGrad / GEPA</td><td>Reflective text updates</td><td>Partly</td></tr>
+          <tr><td>EvoSkill / Trace2Skill</td><td>Self-revision from traces</td><td>Loosely</td></tr>
+          <tr><td class="best">SkillOpt</td><td>Bounded edits, optimizer-style</td><td>Yes, strict held-out gate</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Limitations</h2>
+    <p>Training a skill is itself compute: SkillOpt spends optimizer-model calls and rollouts during the training phase, even though deployment is free, so the cost moves up front rather than away. The strict held-out gate means progress depends on the validation split being representative; a narrow split could accept edits that overfit it. The method assumes a scorable rollout signal, so it inherits the usual limit of needing a usable reward or verifier. And while transfer is demonstrated to a nearby math benchmark and across harnesses, far-domain transfer is not claimed.</p>
+
+    <h2>Learnings</h2>
+    <ol class="body">
+      <li><strong>Text artifacts can be trained, not just generated, if you import optimizer discipline.</strong> The parameter-gradient-learning-rate-validation-momentum mapping is a reusable recipe for any text-space adaptation, not just skills.</li>
+      <li><strong>Stability is the whole game.</strong> Bounded, validation-gated edits keep the optimization history legible so later steps learn from earlier ones; loose self-revision throws that history away.</li>
+      <li><strong>The held-out gate is the judge, and it must be honest.</strong> Accepting only strict improvements on held-out data is what separates real optimization from drift, and it is exactly the verifier-quality dependency this study keeps returning to.</li>
+      <li><strong>Trained skills transfer and cost nothing at deployment.</strong> A skill document moves across models and harnesses and adds zero inference calls, making it a cheap, reusable adaptation layer above the model.</li>
+    </ol>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Best or tied-best on all 52 (model, benchmark, harness) cells against six baselines.</li>
+          <li>Large GPT-5.5 gains across three different harnesses, with zero deployment-time overhead.</li>
+          <li>Trained skills transfer across model scales, harnesses, and to a nearby benchmark.</li>
+          <li>Clean optimizer analogy with ablations confirming each control.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>Training-phase compute is real, even if deployment is free.</li>
+          <li>Depends on a representative held-out split; a narrow one risks overfitting.</li>
+          <li>Needs a scorable rollout signal, like every optimization method here.</li>
+          <li>Far-domain transfer is not demonstrated.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary of terms">
+      <div class="panel-eyebrow">Less-obvious terms</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Skill document</td><td>A persistent text artifact encoding domain procedure, loaded at deployment</td></tr>
+          <tr><td class="mono">Textual learning rate</td><td>An edit budget bounding how much the document changes per step</td></tr>
+          <tr><td class="mono">Held-out gate</td><td>Acceptance rule: keep an edit only if it strictly improves a validation split</td></tr>
+          <tr><td class="mono">Rejected-edit buffer</td><td>Store of failed edits kept as negative feedback for the optimizer</td></tr>
+          <tr><td class="mono">Slow/meta update</td><td>Epoch-wise update acting like momentum, carrying stable directions forward</td></tr>
+          <tr><td class="mono">Cell</td><td>One (model, benchmark, harness) combination in the evaluation grid</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Source</h2>
+      <ul>
+        <li>Yang, Gong, Huang et al., SkillOpt: Executive Strategy for Self-Evolving Agent Skills, Microsoft / SJTU / Tongji / Fudan (2026) · <a href="https://arxiv.org/abs/2605.23904">arxiv.org/abs/2605.23904</a></li>
+        <li>Local copy · <code class="inline">papers/SkillOpt- Executive Strategy for Self-Evolving Agent Skills.pdf</code></li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="life-harness.html"><div><div class="label">Previous paper</div><div class="title">LIFE-HARNESS</div></div></a>
+      <a class="next" href="index.html"><div><div class="label">Back to</div><div class="title">All research papers</div></div></a>
+    </div>
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

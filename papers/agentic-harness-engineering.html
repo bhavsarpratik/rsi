@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Harness Engineering (AHE) · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on AHE, an observability-driven closed loop that automatically evolves coding-agent harnesses with falsifiable edits.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a class="active" href="agentic-harness-engineering.html" aria-current="page"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Paper Deep-Dive</div>
+    <h1>Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses</h1>
+    <p class="standfirst">Automating harness evolution fails when the action space is messy, the traces are huge, and edits cannot be attributed. AHE fixes all three with observability, turning every edit into a falsifiable contract so the loop improves instead of flailing.</p>
+    <div class="byline">
+      <span>Lin, Liu, Pan et al. · Fudan, Peking, Shanghai Qiji Zhifeng</span>
+      <span>arXiv:2604.25850</span>
+      <span>Apr 2026 (rev. May)</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>Authors</dt><dd>Jiahang Lin, Shichun Liu, Chengjun Pan, Lizhi Lin, Shihan Dou, Zhiheng Xi, Xuanjing Huang, Hang Yan, Zhenhua Han, Tao Gui, Yu-Gang Jiang</dd>
+        <dt>Models</dt><dd>GPT-5.4 (all three role agents); transfer tested on qwen-3.6-plus, gemini-3.1-flash-lite, deepseek-v4-flash</dd>
+        <dt>Benchmarks</dt><dd>Terminal-Bench 2 (evolution), SWE-bench Verified (transfer)</dd>
+        <dt>Tags</dt><dd>Harness engineering · observability · coding agents · self-evolving harness · falsifiable edits</dd>
+      </dl>
+    </div>
+
+    <p class="lede">A coding agent's performance rests on its harness as much as its model: the system prompt, the tools that expose the shell and file system, the middleware that manages context and execution, and the memory. Harness engineering is still a manual craft because automating it runs into three walls: the action space is heterogeneous across editable components, trajectories bury the actionable signal under millions of tokens, and the effect of any single edit is hard to attribute. AHE (Agentic Harness Engineering) closes the loop by matching each wall with a form of observability.</p>
+
+    <p>The result is that every edit becomes a falsifiable contract, a self-declared prediction checked against the next round's outcomes, so evolution proceeds without collapsing into trial and error. Ten iterations lift Terminal-Bench 2 pass@1 from 69.7% to 77.0%, beating the human-designed Codex harness (71.9%) and self-evolving baselines, and the frozen harness transfers to other benchmarks and model families without re-evolution.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>As base models advance, the manual loop of reading traces and hand-crafting harness edits cannot keep pace, and it faces two structural obstacles. Long, unstructured trajectories yield little actionable signal, so an evolving agent drowns in tokens. And tightly coupled harness code makes it hard to say which edit caused which change, so the loop cannot tell improvement from noise. Without solving both, automatic harness evolution degenerates into random edits. AHE's bet is that if the evolution agent is given structured context over a clear action space, with each edit's predicted effect later verified, it can reliably converge.</p>
+
+    <div class="callout">
+      <p>Observability is the precondition for autonomy. Make components explicit and revertible, distill traces into evidence, and pair every edit with a prediction you later check, and harness evolution stops being trial and error.</p>
+    </div>
+
+    <h2>How it works</h2>
+
+    <p>AHE rests on three matched observability pillars. <strong>Component observability</strong> gives every editable harness component a file-level representation at a fixed mount point: system prompt, tool description, tool implementation, middleware, skill, sub-agent config, and long-term memory, each a loosely coupled file, so the action space is explicit and every edit is revertible. <strong>Experience observability</strong> distills millions of raw trajectory tokens into a layered, drill-down evidence corpus the evolving agent can actually consume. <strong>Decision observability</strong> pairs every edit with a self-declared prediction (which tasks it should fix, which it might regress), verified against the next round's task-level deltas.</p>
+
+    <div class="fig" role="figure" aria-label="The AHE closed loop">
+      <div class="panel-eyebrow">The three-pillar closed loop</div>
+      <div class="mermaid">
+flowchart TD
+    COMP["Component observability<br/>each harness part is a file"] --> RUN["Coding agent runs<br/>Terminal-Bench tasks"]
+    RUN --> EXP["Experience observability<br/>distill traces into evidence corpus"]
+    EXP --> EVOLVE["Evolve agent reads evidence,<br/>proposes an edit + prediction"]
+    EVOLVE --> DEC["Decision observability<br/>edit paired with predicted fixes and risks"]
+    DEC --> COMP
+    DEC --> VERIFY["Next round verifies<br/>prediction vs outcomes"]
+    VERIFY --> EVOLVE
+      </div>
+      <div class="caption">Three role agents (Code Agent, Agent Debugger, Evolve Agent) share one base model, so any gain is attributable to harness edits, not a stronger evolver.</div>
+    </div>
+
+    <p>The falsifiable-contract idea is the linchpin. Each edit declares a targeted fix plus a predicted impact (expected fixes and at-risk regressions). The next round compares the predicted-fix and predicted-regression sets against the observed task-level deltas, producing a per-edit verification. The paper finds the evolve agent is reliable at predicting fixes but largely blind to regressions, which it flags as the clearest target for improvement: regression foresight.</p>
+
+    <div class="fig" role="figure" aria-label="Edit as a falsifiable contract">
+      <div class="panel-eyebrow">Every edit is a checkable bet</div>
+      <div class="mermaid">
+flowchart LR
+    EDIT["Propose edit"] --> PRED["Declare prediction:<br/>tasks to fix, tasks at risk"]
+    PRED --> APPLY["Apply, run next round"]
+    APPLY --> DELTA["Observe task-level deltas"]
+    DELTA --> CHECK{"Prediction matched?"}
+    CHECK -->|"fix confirmed"| KEEP["Keep edit"]
+    CHECK -->|"unforeseen regression"| REVERT["Revert via file-level rollback"]
+      </div>
+      <div class="caption">Because components are files, any edit is cleanly revertible. The contract makes evolution auditable rather than a black-box search.</div>
+    </div>
+
+    <h2>Results</h2>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">69.7 to 77.0</div><div class="label">Terminal-Bench 2 pass@1 over ten AHE iterations, beating Codex at 71.9%</div></div>
+      <div class="receipt"><div class="num">+5.1 to +10.1 pp</div><div class="label">Cross-family pass@1 gains from the frozen harness on three other model families</div></div>
+      <div class="receipt"><div class="num">12% fewer</div><div class="label">Tokens than the seed harness on SWE-bench Verified, at the highest aggregate success</div></div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="Terminal-Bench 2 results">
+      <div class="panel-eyebrow">Terminal-Bench 2 pass@1 (GPT-5.4)</div>
+      <table>
+        <thead><tr><th>Harness</th><th>Pass@1</th></tr></thead>
+        <tbody>
+          <tr><td>Seed harness</td><td class="mono">69.7</td></tr>
+          <tr><td>ACE (self-evolving)</td><td class="mono">68.9</td></tr>
+          <tr><td>Codex (human-designed)</td><td class="mono">71.9</td></tr>
+          <tr><td>Training-Free GRPO</td><td class="mono">72.3</td></tr>
+          <tr><td>AHE (10 iterations)</td><td class="mono best">77.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The harness transfers without re-evolution</h3>
+    <p>The harness is evolved once on Terminal-Bench 2 with GPT-5.4, then frozen and reused. On SWE-bench Verified it reaches the highest aggregate success while spending 12% fewer tokens than the seed, where the self-evolving baselines ACE and TF-GRPO both regress below the seed and spend more. Across three alternate model families the frozen harness gives consistent gains, and crucially the largest gains land on the bases furthest from saturation.</p>
+
+    <div class="tablewrap" role="figure" aria-label="Cross-family transfer">
+      <div class="panel-eyebrow">Frozen harness, cross-family pass@1 gain</div>
+      <table>
+        <thead><tr><th>Base model</th><th>Before</th><th>After</th><th>Gain</th></tr></thead>
+        <tbody>
+          <tr><td>deepseek-v4-flash</td><td class="mono">51.7</td><td class="mono">61.8</td><td class="mono best">+10.1</td></tr>
+          <tr><td>qwen-3.6-plus</td><td class="mono">56.2</td><td class="mono">62.5</td><td class="mono">+6.3</td></tr>
+          <tr><td>gemini-3.1-flash-lite</td><td class="mono">36.5</td><td class="mono">41.6</td><td class="mono">+5.1</td></tr>
+          <tr><td>GPT-5.4 (medium / xhigh)</td><td class="mono">n/a</td><td class="mono">n/a</td><td class="mono">+2.3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Cross-family gains beating within-family ones is the evidence that the evolved components encode general engineering experience (coordination patterns weaker models lean on more) rather than benchmark-specific tuning fitted to GPT-5.4.</p>
+
+    <h3>Where the gain lives</h3>
+    <p>A component ablation localizes the improvement. Tools, middleware, and long-term memory each carry the gain on their own, while the system prompt edited alone regresses. This matches the recurring harness-engineering finding that the durable wins are in the factual structure (tools, context management, memory), not in prompt wording, and it explains why the harness transfers: factual structure is model-agnostic in a way prompt phrasing is not.</p>
+
+    <h2>What it changes</h2>
+    <p>AHE's contribution is making harness evolution observable enough to be autonomous. Prior self-evolving harness work either edits a single surface or treats the harness as an opaque blob; AHE tunes the full harness as a combinatorial whole, but only because component observability gives a clean action space and decision observability makes each edit's effect attributable. The falsifiable-contract framing is the transferable idea: an edit you can verify against a prediction is an edit a loop can learn from, which is exactly what separates AHE from trial-and-error self-evolution.</p>
+
+    <h2>Where it sits among prior work</h2>
+    <div class="tablewrap" role="figure" aria-label="Comparison with harness evolution methods">
+      <div class="panel-eyebrow">Harness evolution compared</div>
+      <table>
+        <thead><tr><th>Method</th><th>Action space</th><th>Edit attribution</th></tr></thead>
+        <tbody>
+          <tr><td>ACE</td><td>Context/prompt edits</td><td>Weak</td></tr>
+          <tr><td>Training-Free GRPO</td><td>Trace-driven prompt updates</td><td>Weak</td></tr>
+          <tr><td>Codex (human)</td><td>Full harness, manual</td><td>Human judgment</td></tr>
+          <tr><td class="best">AHE</td><td>Full harness as files</td><td>Falsifiable per-edit contract</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Limitations</h2>
+    <p>The evolution runs on Terminal-Bench 2 with GPT-5.4 and a step budget and per-task timeout fitted to that setting, which partly explains the smaller within-family gains. The decision-observability check shows the evolve agent predicts fixes well but is blind to regressions, so the contract is only half-closed; unforeseen regressions still slip through until a later round catches them. As with the other systems in this study, the gains are measured on the benchmarks the harness was evolved or transferred against, and the verifier is the benchmark's own pass signal, so a harder held-out distribution is untested. Marginal regressions appear on the three smallest SWE-bench repositories.</p>
+
+    <h2>Learnings</h2>
+    <ol class="body">
+      <li><strong>Observability is what makes self-evolution work, not the search.</strong> The three pillars (explicit components, distilled experience, verified decisions) are what stop the loop from flailing. Give the evolver structure and attribution and it converges.</li>
+      <li><strong>Falsifiable edits beat blind edits.</strong> Pairing every change with a checkable prediction turns evolution into something auditable, and it surfaces the weak spot (regression foresight) precisely.</li>
+      <li><strong>Durable harness gains live in tools, middleware, and memory, not the prompt.</strong> The ablation is a clean restatement of the LIFE-HARNESS lesson: factual structure transfers across models; prompt wording does not, and editing it alone can regress.</li>
+      <li><strong>Evolve on cheap, transfer to the rest.</strong> A harness evolved once and frozen carries the largest gains to weaker, less-saturated models, so the cost amortizes across a model family.</li>
+    </ol>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Beats both a human-designed harness and self-evolving baselines on Terminal-Bench 2.</li>
+          <li>Frozen harness transfers across benchmarks and model families, largest gains where models are weakest.</li>
+          <li>Component ablation cleanly localizes the gain to tools, middleware, and memory.</li>
+          <li>Falsifiable-contract design makes evolution auditable and revertible.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>Evolve agent predicts fixes well but is blind to regressions.</li>
+          <li>Budgets fitted to GPT-5.4 high, which dampens within-family gains.</li>
+          <li>Gains measured on the benchmarks evolved or transferred against; no harder held-out test.</li>
+          <li>Minor regressions on the smallest repositories.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary of terms">
+      <div class="panel-eyebrow">Less-obvious terms</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Component observability</td><td>Every editable harness part as a revertible file at a fixed mount point</td></tr>
+          <tr><td class="mono">Experience observability</td><td>Raw trajectories distilled into a layered, drill-down evidence corpus</td></tr>
+          <tr><td class="mono">Decision observability</td><td>Each edit paired with a self-declared prediction, verified next round</td></tr>
+          <tr><td class="mono">Falsifiable contract</td><td>An edit whose predicted fixes and risks can be checked against outcomes</td></tr>
+          <tr><td class="mono">Middleware</td><td>Harness code that controls context, execution, and feedback between model and environment</td></tr>
+          <tr><td class="mono">Terminal-Bench 2</td><td>Benchmark of multi-step terminal workflows used for evolution</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Source</h2>
+      <ul>
+        <li>Lin, Liu, Pan et al., Agentic Harness Engineering: Observability-Driven Automatic Evolution of Coding-Agent Harnesses, Fudan / Peking / Shanghai Qiji Zhifeng (2026) · <a href="https://arxiv.org/abs/2604.25850">arxiv.org/abs/2604.25850</a></li>
+        <li>Local copy · <code class="inline">papers/Agentic Harness Engineering- Observability-Driven Automatic Evolution of Coding-Agent Harnesses.pdf</code></li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="bilevel-autoresearch.html"><div><div class="label">Previous paper</div><div class="title">Bilevel Autoresearch</div></div></a>
+      <a class="next" href="index.html"><div><div class="label">Back to</div><div class="title">All research papers</div></div></a>
+    </div>
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

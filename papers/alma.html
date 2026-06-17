@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Learning to Continually Learn (ALMA) · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on ALMA, a framework that meta-learns agent memory designs as code, beating human-crafted memory across four domains.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a class="active" href="alma.html" aria-current="page"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Paper Deep-Dive</div>
+    <h1>Learning to Continually Learn via Meta-learning Agentic Memory Designs</h1>
+    <p class="standfirst">Stop hand-crafting agent memory. ALMA puts a meta-agent in charge of searching over memory designs written as code, and the designs it discovers beat the best human-made ones across four domains.</p>
+    <div class="byline">
+      <span>Yiming Xiong, Shengran Hu, Jeff Clune · UBC</span>
+      <span>arXiv:2602.07755</span>
+      <span>Feb 2026</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>Authors</dt><dd>Yiming Xiong, Shengran Hu, Jeff Clune (University of British Columbia; also Vector Institute, CIFAR)</dd>
+        <dt>Agent models</dt><dd>GPT-5-nano (search), GPT-5-mini (transfer test)</dd>
+        <dt>Domains</dt><dd>ALFWorld, TextWorld, Baba Is AI, MiniHack (four sequential decision-making benchmarks)</dd>
+        <dt>Tags</dt><dd>Agent memory · meta-learning · open-ended search · continual learning · automated design</dd>
+      </dl>
+    </div>
+
+    <p class="lede">Foundation models are stateless at inference, so agents built on them keep solving tasks from scratch and never accumulate experience. The usual fix is a memory module, but the memory design itself, how memories are represented, stored, retrieved, and updated, is almost always hand-engineered and fixed, and the best design differs by domain. ALMA (Automated meta-Learning of Memory designs for Agentic systems) replaces the human designer with a Meta Agent that searches over memory designs expressed as executable code, in an open-ended way that can in principle reach any design, including database schemas and their retrieval and update logic.</p>
+
+    <p>Across four sequential decision-making domains the discovered designs beat state-of-the-art human-crafted memory on every benchmark, and they transfer: a design searched with a small model keeps its edge when moved to a more capable one. This is the memory layer's version of the field's recurring lesson, that hand-built components eventually get replaced by learned ones.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>Memory lets an agent store and reuse past experience, which is the precondition for continual learning. But different domains need different memory. A conversational agent wants to retain facts about the user; a strategic-game agent wants abstract skills and strategies, not episode-specific details that change every run. So researchers hand-tailor a separate memory design per domain, which is slow, labor-intensive, and unlikely to be optimal. The deeper issue is that a fixed, human-crafted design cannot adapt to the diversity and non-stationarity of real tasks.</p>
+
+    <div class="callout">
+      <p>Memory design is itself a search problem. If you express memory as code and let a meta-agent explore the space open-endedly, it finds designs tailored to each domain that beat anything hand-built.</p>
+    </div>
+
+    <h2>How it works</h2>
+
+    <p>ALMA separates two roles. The Meta Agent searches the space of memory designs. Each candidate design is a piece of executable code that specifies the memory's schema plus its retrieval and update mechanisms. A candidate is then evaluated by running an agentic system that uses it through a Deployment Phase on a target domain, and the resulting success rate (and efficiency) feeds back to the Meta Agent, which reflects on the code and evaluation logs and proposes the next design.</p>
+
+    <div class="fig" role="figure" aria-label="The ALMA meta-search loop">
+      <div class="panel-eyebrow">The meta-search loop</div>
+      <div class="mermaid">
+flowchart TD
+    META["Meta Agent"] --> IDEA["Ideate and plan<br/>a new memory design"]
+    IDEA --> CODE["Write design as<br/>executable code"]
+    CODE --> EVAL["Evaluate: run agent<br/>with this memory on the domain"]
+    EVAL --> LOG["Success rate + logs"]
+    LOG --> REFLECT["Meta Agent reflects,<br/>repairs errors, picks parent"]
+    REFLECT --> META
+    LOG --> ARCHIVE["Archive of designs"]
+    ARCHIVE --> REFLECT
+      </div>
+      <div class="caption">Designs are code, so the search space is open-ended: schemas, retrieval rules, and update logic are all editable. The Meta Agent samples a previously discovered design as a parent and proposes a child, repairing it if evaluation throws errors.</div>
+    </div>
+
+    <p>The search is explicitly open-ended rather than greedy. Selection balances refining successful designs against exploring new ones, favoring designs by success rate but also rewarding novelty, so the archive accumulates stepping-stone mechanisms (the paper gives examples like property validation and spatial object normalization on Baba Is AI) that do not pay off immediately but enable a later breakthrough design once a key mechanism such as strategy switching is added.</p>
+
+    <div class="fig" role="figure" aria-label="Two-phase evaluation of a memory design">
+      <div class="panel-eyebrow">How a design is scored</div>
+      <div class="mermaid">
+flowchart LR
+    DESIGN["Candidate memory design"] --> COLLECT["Collection phase:<br/>gather experience, fill memory"]
+    COLLECT --> DEPLOY["Deployment phase:<br/>solve held-out tasks using memory"]
+    DEPLOY --> SR["Success rate over 3 runs"]
+    SR --> FIT["Fitness back to Meta Agent"]
+      </div>
+      <div class="caption">A design earns its score on the deployment phase, where the agent must use the memory it built to solve tasks. Results are averaged over three deployment runs.</div>
+    </div>
+
+    <h2>Results</h2>
+
+    <p>Four sequential decision-making domains test whether an agent can continually learn from experience: ALFWorld (text-based household tasks), TextWorld (kitchen environments), Baba Is AI (rule-manipulation puzzles), and MiniHack. With the agentic system powered by GPT-5-nano, the learned designs beat every human-crafted baseline, including Trajectory Retrieval, ReasoningBank, Dynamic Cheatsheet, and G-Memory.</p>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">+6.2 pp</div><div class="label">Overall gain over no-memory on GPT-5-nano, best of all designs tested</div></div>
+      <div class="receipt"><div class="num">+12.8 pp</div><div class="label">Overall gain when the learned design transfers to GPT-5-mini</div></div>
+      <div class="receipt"><div class="num">4 / 4</div><div class="label">Domains where the learned design beats every human-crafted baseline</div></div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="Overall success rate by memory design">
+      <div class="panel-eyebrow">Overall average success rate (%)</div>
+      <table>
+        <thead><tr><th>Backbone</th><th>Memory design</th><th>Overall</th><th>vs no-memory</th></tr></thead>
+        <tbody>
+          <tr><td>GPT-5-nano</td><td>No Memory</td><td class="mono">6.1</td><td class="mono">n/a</td></tr>
+          <tr><td>GPT-5-nano</td><td>Trajectory Retrieval</td><td class="mono">8.6</td><td class="mono">+2.5</td></tr>
+          <tr><td>GPT-5-nano</td><td>G-Memory</td><td class="mono">7.7</td><td class="mono">+1.6</td></tr>
+          <tr><td>GPT-5-nano</td><td>ReasoningBank</td><td class="mono">7.5</td><td class="mono">+1.4</td></tr>
+          <tr><td>GPT-5-nano</td><td>ALMA (learned)</td><td class="mono best">12.3</td><td class="mono best">+6.2</td></tr>
+          <tr><td>GPT-5-mini</td><td>No Memory</td><td class="mono">41.1</td><td class="mono">n/a</td></tr>
+          <tr><td>GPT-5-mini</td><td>Trajectory Retrieval</td><td class="mono">48.6</td><td class="mono">+7.5</td></tr>
+          <tr><td>GPT-5-mini</td><td>Dynamic Cheatsheet</td><td class="mono">46.5</td><td class="mono">+5.4</td></tr>
+          <tr><td>GPT-5-mini</td><td>ALMA (transferred)</td><td class="mono best">53.9</td><td class="mono best">+12.8</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The gain grows with model strength</h3>
+    <p>The transfer result is the one to sit with. A design searched on GPT-5-nano, moved unchanged to the stronger GPT-5-mini, lifts overall success by 12.8 points versus no memory, beating every human baseline at that scale too. The improvement is larger on the more capable model (12.8 vs 6.2), a delta of 6.6 points that itself exceeds every human-designed baseline's total gain, which suggests learned memory designs give more headroom to stronger agents rather than just patching weak ones. On individual domains the jumps are large: ALFWorld goes from 67.6% no-memory to 87.1% with the transferred design.</p>
+
+    <h3>Open-ended search beats greedy</h3>
+    <p>An ablation replaces open-ended exploration with greedy search that always builds on the current best design. Greedy reaches 11.9% (nano) and 77.1% (mini) on ALFWorld, both below the open-ended results (12.4% and 87.1%), confirming that the stepping-stone designs, which look unpromising in the moment, are what make the eventual best design reachable.</p>
+
+    <h2>What it changes</h2>
+    <p>ALMA moves the locus of design up one level. Prior memory work asks "what is the best memory design for this domain" and answers it by hand. ALMA asks "what process discovers the best memory design" and answers it with an open-ended meta-search over code. Because designs are code, the search space is unbounded in principle, so the method is not limited to variations on a fixed template; it can invent schemas and update rules a human might not think to try. The transfer result shows the discovered design captures something about the domain, not just a quirk of the search-time model.</p>
+
+    <h2>Where it sits among prior work</h2>
+    <div class="tablewrap" role="figure" aria-label="Comparison with memory approaches">
+      <div class="panel-eyebrow">Memory approaches compared</div>
+      <table>
+        <thead><tr><th>Approach</th><th>Who designs the memory?</th><th>Adapts per domain?</th></tr></thead>
+        <tbody>
+          <tr><td>Trajectory Retrieval</td><td>Human, fixed</td><td>No</td></tr>
+          <tr><td>ReasoningBank</td><td>Human, fixed</td><td>No</td></tr>
+          <tr><td>G-Memory</td><td>Human, fixed (graph)</td><td>No</td></tr>
+          <tr><td class="best">ALMA</td><td>Meta-agent search over code</td><td>Yes, per domain</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>ALMA is a memory-layer cousin of automated agentic system design: where that line searches over agent architectures, ALMA searches specifically over memory designs, and it shares the open-ended, archive-driven exploration philosophy associated with Clune's work on open-endedness.</p>
+
+    <h2>Limitations</h2>
+    <p>The search itself costs compute: every candidate design is evaluated by running full deployment phases, so discovering a good design is far more expensive than using one. The work focuses on token-level memory and four sequential decision-making domains, so it does not test parametric or latent-state memory, or domains like open-ended dialogue. Success-rate-driven search inherits the usual risk that the evaluation signal is the only thing optimized, so a design that games the specific benchmark could score well without being a better memory in general. The authors frame safe development and deployment as a precondition, acknowledging that an automated designer of agent internals raises oversight questions.</p>
+
+    <h2>Learnings</h2>
+    <ol class="body">
+      <li><strong>The design of memory is searchable, and search beats hand-crafting.</strong> Expressing memory as code turns "pick a memory architecture" into an optimization problem, and the learned designs win on all four domains.</li>
+      <li><strong>Open-endedness matters more than greedy improvement.</strong> The stepping-stone designs that look useless in isolation are what unlock the best final design; greedy search that always exploits the current best does worse.</li>
+      <li><strong>Learned designs transfer and scale.</strong> A design found on a small model helps a larger one more, which is the signal that the search captured domain structure rather than model-specific tricks.</li>
+      <li><strong>This is recursion one level up.</strong> For the RSI study, ALMA is notable because the thing being improved is the improvement substrate (the memory system), not the task policy. It pairs naturally with SIA's proposed meta-RL over the action selector: both move the optimization target from the artifact to the mechanism.</li>
+    </ol>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Beats every human-crafted memory baseline on all four domains, with both a small and a larger model.</li>
+          <li>Learned designs transfer across models and help stronger agents more.</li>
+          <li>Open-ended search is ablated against greedy and clearly wins.</li>
+          <li>Code-level design space is genuinely open, not a fixed template.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>Searching designs is compute-heavy; each candidate needs full deployment runs.</li>
+          <li>Limited to token-level memory and four decision-making domains.</li>
+          <li>Success-rate search can overfit the evaluation benchmark.</li>
+          <li>Automated design of agent internals raises oversight and safety questions the authors flag.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary of terms">
+      <div class="panel-eyebrow">Less-obvious terms</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">ALMA</td><td>Automated meta-Learning of Memory designs for Agentic systems</td></tr>
+          <tr><td class="mono">Memory design</td><td>The spec for how memories are represented, stored, retrieved, and updated</td></tr>
+          <tr><td class="mono">Meta Agent</td><td>The LLM that searches over memory designs and proposes new ones</td></tr>
+          <tr><td class="mono">Open-ended search</td><td>Exploration that values novelty and stepping stones, not just the current best</td></tr>
+          <tr><td class="mono">Collection vs deployment</td><td>Filling memory with experience, then solving held-out tasks using it</td></tr>
+          <tr><td class="mono">Token-level memory</td><td>Memory stored as text tokens, as opposed to parametric weights or latent states</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Source</h2>
+      <ul>
+        <li>Xiong, Hu, Clune, Learning to Continually Learn via Meta-learning Agentic Memory Designs, University of British Columbia (2026) · <a href="https://arxiv.org/abs/2602.07755">arxiv.org/abs/2602.07755</a></li>
+        <li>Local copy · <code class="inline">papers/Learning to Continually Learn via Meta-learning Agentic Memory Designs.pdf</code></li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="agent0.html"><div><div class="label">Previous paper</div><div class="title">Agent0</div></div></a>
+      <a class="next" href="index.html"><div><div class="label">Back to</div><div class="title">All research papers</div></div></a>
+    </div>
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

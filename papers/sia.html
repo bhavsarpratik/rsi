@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIA: Self Improving AI with Harness &amp; Weight Updates · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on SIA (Hexo Labs), a self-improvement loop that updates both the agent harness and the model weights in a single loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a class="active" href="sia.html" aria-current="page"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Paper Deep-Dive</div>
+    <h1>SIA: Self Improving AI with Harness &amp; Weight Updates</h1>
+    <p class="standfirst">Prior work turns one knob, the scaffold or the weights. SIA turns both in a single loop, and shows the two levers reach gains neither reaches alone.</p>
+    <div class="byline">
+      <span>Hebbar, Manawat et al. · Hexo Labs</span>
+      <span>arXiv:2605.27276v2</span>
+      <span>May 2026</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>Authors</dt><dd>Prannay Hebbar, Yogendra Manawat (equal contribution), Samuel Verboomen, Alesia Ivanova, Selvam Palanimalai, Kunal Bhatia, Vignesh Baskaran</dd>
+        <dt>Affiliations</dt><dd>Hexo Labs (Palo Alto, Brussels, Toronto), University of Oxford</dd>
+        <dt>Base model</dt><dd><code class="inline">gpt-oss-120b</code> task agent; Claude Sonnet 4.6 as Meta-Agent and Feedback-Agent</dd>
+        <dt>Tags</dt><dd>Self-improving agents · test-time training · RL · harness engineering · scaffold generation</dd>
+      </dl>
+    </div>
+
+    <p class="lede">SIA is a self-improvement loop that does in one system what prior work split into two camps: it updates both the agent's harness (the scaffold of prompts, tools, retry logic, and parsers around a model) and the model's own weights, with no human in the loop after setup.</p>
+
+    <p>A language-model "Feedback-Agent" reads the full execution trace of a task-specific agent and decides, step by step, whether to rewrite the scaffold or fire an RL weight update. Tested on three deliberately unrelated tasks (Chinese legal classification, GPU kernel optimisation, single-cell RNA denoising), the combined approach beats scaffold-only iteration every time and clears prior state-of-the-art on all three. The framing the paper sells: the harness changes <em>how the agent searches</em>; weight updates change <em>what the model knows</em>.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>The paper opens with a blunt claim: humans are the bottleneck in improving AI. People design and post-train the models, and people scaffold, prompt, and debug the agents wrapped around them. Work on automating this has split into two camps that mostly ignore each other.</p>
+
+    <ul class="body">
+      <li><strong>Silo 1, harness/scaffold self-improvement.</strong> A meta-agent rewrites the task agent's scaffold (system prompt, tool dispatch, retry policy, answer extraction) across generations, weights frozen. Representatives: Darwin Gödel Machine, Meta-Harness, Hyperagents. The recurring finding is that scaffold edits tend to be software-engineering hygiene and rarely add reasoning the base model couldn't already produce.</li>
+      <li><strong>Silo 2, test-time post-training.</strong> A hand-written RL pipeline updates the model's weights on task feedback, harness pinned to one template. Representatives: TTRL, the Discover line of test-time training. Gains come from internal policy change, but the pipeline is human-engineered and doesn't adapt to task structure.</li>
+    </ul>
+
+    <p>The gap SIA targets: harness work leaves the model fixed; test-time training leaves the harness fixed. Nobody turns both knobs in one loop.</p>
+
+    <div class="callout">
+      <p>The harness shapes how the agent searches. Weight updates change what the model knows. They occupy distinct change spaces, so neither saturates the gains available from the other.</p>
+    </div>
+
+    <h2>How SIA works</h2>
+
+    <p>SIA runs a configurable loop over three LLM components. The <strong>Meta-Agent</strong> initialises the scaffold from the task spec. The <strong>Task-Specific Agent</strong> executes against the dataset, producing a trajectory. The <strong>Feedback-Agent</strong> watches that trajectory and picks one of two actions: a harness update (evolve the scaffold, weights fixed) or a weight update (RL via a method it chooses, scaffold fixed). The decisive design choice is that the Feedback-Agent receives the <em>full trajectory</em>, every prompt, model response, tool call, tool result, and extracted answer, not just an aggregate metric. That lets it diagnose specific failure modes instead of reacting to a single number.</p>
+
+    <p>The agent it edits is itself decomposed into five named parts, and "harness" refers to everything except the weights: the <strong>LLM</strong> (weights θ), the <strong>system prompt</strong>, the <strong>tool-dispatch logic</strong> (Python that parses tool calls and routes them to handlers), the <strong>answer-extraction</strong> code (turns a model response into a benchmark-formatted prediction), and the <strong>grader</strong> (the deterministic verifier that computes per-instance reward). The two meta-agents are formalised as functions: the Meta-Agent generates the first scaffold from the task spec and any reference implementations, <code class="inline">A₁ = M(U, R)</code>, and the Feedback-Agent synthesises the next one from the last scaffold, its trajectory, and its metrics, <code class="inline">A_g+1 = F(A_g, τ_g, E_g, U)</code>.</p>
+
+    <p>Every generation runs the same three-phase protocol. <strong>Execution:</strong> the scaffold runs on the dataset inside a sandbox (read-only dataset, read/write working directory) and the trajectory is captured. <strong>Analysis:</strong> the Feedback-Agent reads the scaffold source, the trajectory, the metrics, and optionally a few sample task descriptions to discourage single-instance overfitting. <strong>Improvement:</strong> it emits two artefacts, a prose improvement report explaining the proposed changes, and the next-generation agent. The Meta-Agent is also conditioned on a diverse set of task specifications when it writes the first scaffold, which the authors call sample-task regularisation, to keep <code class="inline">A₁</code> from overfitting one benchmark instance.</p>
+
+    <div class="fig" role="figure" aria-label="SIA system architecture">
+      <div class="panel-eyebrow">System architecture</div>
+      <div class="mermaid">
+flowchart TD
+    U["Task spec U"] --> M["Meta-Agent<br/>initialises scaffold"]
+    V["Verifier V"] --> M
+    M --> TSA["Task-Specific Agent<br/>executes the task"]
+    TSA --> ENV["Environment<br/>sandbox run, trajectory captured"]
+    ENV --> FB["Feedback-Agent<br/>analyses trajectory, picks next action"]
+    FB -->|"update harness OR weights"| TSA
+      </div>
+      <div class="caption">The loop repeats until the step budget is exhausted. The Feedback-Agent either synthesises an improved scaffold or triggers a weight update, then feeds the result back to the task agent.</div>
+    </div>
+
+    <p>Across all three tasks the Feedback-Agent began with scaffold iteration and switched to weight updates once harness progress stalled. The paper stresses these are soft labels, not rigid phases: the two update types are interleaved freely, and an example run looks like H, H, H, W, H, W, W rather than a clean split.</p>
+
+    <div class="fig" role="figure" aria-label="The two-lever decision loop">
+      <div class="panel-eyebrow">The two-lever decision</div>
+      <div class="mermaid">
+flowchart TD
+    START["Execute scaffold A_g with policy pi_theta"] --> TRAJ["Capture trajectory + metrics"]
+    TRAJ --> DECIDE{"Reward still rising<br/>from harness edits?"}
+    DECIDE -->|"Yes: harness update H"| HARNESS["Rewrite scaffold<br/>A_g+1 = F(A_g, tau_g, E_g, U)<br/>weights frozen"]
+    DECIDE -->|"Plateau: weight update W"| WEIGHT["RL update on theta via LoRA<br/>PPO / GRPO / entropic /<br/>REINFORCE+KL / BoN-BC / DPO<br/>scaffold frozen"]
+    HARNESS --> START
+    WEIGHT --> START
+      </div>
+      <div class="caption">All weight updates adapt <code class="inline">gpt-oss-120b</code> via LoRA (rank 32, learning rate 4×10⁻⁵) on H100 GPUs.</div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="Notation">
+      <div class="panel-eyebrow">Notation used in the paper</div>
+      <table>
+        <thead><tr><th>Symbol</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">g, G_max</td><td>Generation index, and the maximum number of generations</td></tr>
+          <tr><td class="mono">A_g</td><td>Agent scaffold at generation g</td></tr>
+          <tr><td class="mono">D, U</td><td>Evaluation dataset, and task specification (description + sample instances)</td></tr>
+          <tr><td class="mono">E_g, τ_g</td><td>Performance metrics/error logs, and full execution trajectory at generation g</td></tr>
+          <tr><td class="mono">F, M</td><td>Feedback-Agent, and Meta-Agent</td></tr>
+          <tr><td class="mono">π_θ, π_θ0</td><td>Current policy (trainable weights θ), and frozen reference policy (base model)</td></tr>
+          <tr><td class="mono">G</td><td>Number of rollouts per state during RL training</td></tr>
+          <tr><td class="mono">V(s, a)</td><td>Task reward for action a given state s</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Choosing the RL algorithm</h2>
+
+    <p>One of the more interesting parts of the paper: the Feedback-Agent does not run a fixed RL procedure. It selects an algorithm from the reward structure it observes. The paper reports which algorithm appeared on each task, plus a broader menu of patterns seen across an unpublished task set (a fuller treatment of selection is deferred to a future version). The throughline is that each method is matched to the shape of the reward histogram and the cost of a rollout, not to a fixed schedule.</p>
+
+    <div class="tablewrap" role="figure" aria-label="RL algorithm selection">
+      <div class="panel-eyebrow">Algorithm, keyed to reward shape</div>
+      <table>
+        <thead><tr><th>Algorithm</th><th>Chosen when</th><th>Mechanism</th><th>Seen on</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">PPO + GAE</td><td>Dense step-level rewards; stability is the binding constraint (long code-gen, multi-step tool use)</td><td>Learned value head gives per-token advantages; clipped surrogate keeps the policy in a trust region. Expensive actor-critic, lowest-variance gradient</td><td>LawBench</td></tr>
+          <tr><td class="mono">GRPO</td><td>Cheap rollouts; verifier fires at episode end (classification, short-answer, unit tests)</td><td>Advantages normalised within a rollout group of size G, no value network. Halves memory, enables large parallel batches</td><td>Denoising</td></tr>
+          <tr><td class="mono">Entropic weighting</td><td>Right-skewed reward; correct solutions rare but individually high-signal (hard proofs, low-pass-rate code)</td><td>Softmax redistribution of gradient mass, w_i ∝ exp(r_i/β), with temperature β tuned online to hold effective sample size above a floor</td><td>TriMul</td></tr>
+          <tr><td class="mono">REINFORCE + KL</td><td>Dense reward; main risk is capability regression, not variance (base model already near-capable)</td><td>Monte Carlo returns as advantages plus a KL penalty to the frozen reference. No critic, no grouping, the simplest loop</td><td>broader set</td></tr>
+          <tr><td class="mono">Best-of-N BC</td><td>Reward so sparse that E[r] ≈ 0 and gradient is numerically zero</td><td>Phase-zero cold start: distil the top-k rollouts by verifier score via cross-entropy until PPO/GRPO becomes viable</td><td>broader set</td></tr>
+          <tr><td class="mono">DPO</td><td>Verifier can rank outputs but not score them absolutely (soft quality criteria)</td><td>Direct preference objective on a winning vs. losing rollout, no reward model</td><td>broader set</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Results</h2>
+
+    <p>Three tasks were chosen for contrast across law, systems, and biology, and because they allow direct comparison to prior published results. The "initial" score is the base model filtered through the Meta-Agent's first scaffold, before any feedback iteration. <strong>SIA-H</strong> is the harness-only best; <strong>SIA-W+H</strong> adds weight updates.</p>
+
+    <div class="tablewrap" role="figure" aria-label="Main ablation results">
+      <div class="panel-eyebrow">SIA-H vs. SIA-W+H</div>
+      <table>
+        <thead><tr><th>Task</th><th>Initial</th><th>Prev. SOTA</th><th>SIA-H</th><th>SIA-W+H</th></tr></thead>
+        <tbody>
+          <tr><td>LawBench (top-1 acc)</td><td class="mono">13.5%</td><td class="mono">45.0%</td><td class="mono">50.0%</td><td class="mono best">70.1%</td></tr>
+          <tr><td>AlphaEvolve TriMul (reward)</td><td class="mono">0.105</td><td class="mono">1.292</td><td class="mono">0.120</td><td class="mono best">1.475</td></tr>
+          <tr><td>Denoising (mse_norm)</td><td class="mono">0.048</td><td class="mono">0.240</td><td class="mono">0.241</td><td class="mono best">0.289</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The paper also runs two off-the-shelf coding agents on the same tasks as reference points: Codex (Codex 5.5) and Claude Code (Opus 4.7). Both sit far below SIA, which is the case the authors make for a dedicated self-improvement loop over a strong general agent.</p>
+
+    <div class="tablewrap" role="figure" aria-label="External coding-agent baselines">
+      <div class="panel-eyebrow">vs. general coding agents</div>
+      <table>
+        <thead><tr><th>Task</th><th>Codex 5.5</th><th>Claude Code (Opus 4.7)</th><th>SIA-H</th><th>SIA-W+H</th></tr></thead>
+        <tbody>
+          <tr><td>LawBench (top-1 acc)</td><td class="mono">0.193</td><td class="mono">0.173</td><td class="mono">0.500</td><td class="mono best">0.701</td></tr>
+          <tr><td>TriMul (speedup)</td><td class="mono">1.10×</td><td class="mono">1.50×</td><td class="mono">1.14×</td><td class="mono best">14.02×</td></tr>
+          <tr><td>Denoising (mse_norm)</td><td class="mono">0.232</td><td class="mono">0.218</td><td class="mono">0.241</td><td class="mono best">0.289</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>SIA-W+H beats SIA-H on every task, confirming the paper's central thesis. The gains over prior SOTA:</p>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">+25.1%</div><div class="label">LawBench top-1 accuracy over prior SOTA (70.1% vs 45.0%)</div></div>
+      <div class="receipt"><div class="num">14.02×</div><div class="label">TriMul kernel speedup, 1,017 µs vs prior SOTA 1,161 µs (12.4% faster)</div></div>
+      <div class="receipt"><div class="num">+20.4%</div><div class="label">scRNA-seq denoising mse_norm over prior SOTA (0.289 vs 0.240)</div></div>
+    </div>
+
+    <h3>LawBench: 191-class Chinese criminal charge classification</h3>
+    <p>Given a case summary, the model picks the correct charge from 191 fine-grained categories where random guessing is right under 1% of the time. The harness phase built a TF-IDF + LinearSVC pipeline and tuned it to 50.0% (a 36.5 pp gain), then stalled. With a clean scalar reward and cheap parallel rollouts, the Feedback-Agent applied PPO with GAE and pushed accuracy to 70.1%, another 20.1 pp on top of harness-only.</p>
+
+    <h3>AlphaEvolve TriMul: CUDA kernel optimisation</h3>
+    <p>The agent must write a custom CUDA kernel for the triangular multiplicative update from AlphaFold2's Evoformer, on an H100. It is memory-bandwidth-limited with triangular sparsity, so standard dense-matrix tricks fail. The harness phase reached 12,483 µs (1.14×) then plateaued. Because most kernels fail to compile, the Feedback-Agent used entropic advantage weighting to up-weight rare high-reward rollouts. The model internalised H100-specific patterns (shared-memory tiling, fp32 register accumulation, block-size selection), driving runtime to 1,017 µs, a 14.02× speedup and a 91.9% reduction from the harness-only peak.</p>
+
+    <h3>MAGIC scRNA-seq denoising: single-cell RNA imputation</h3>
+    <p>The agent tunes MAGIC's coupled hyperparameters on sparse single-cell data. The harness phase plateaued at mse_norm 0.241. Using GRPO, the first weight-update checkpoint introduced a structural change the scaffold loop never produced across all its iterations: a two-line post-processing step (<code class="inline">np.clip</code> + <code class="inline">np.rint</code>) that rounds imputed counts to non-negative integers, enforcing a biological invariant. That lifted mse_norm to 0.289. It is the cleanest demonstration of the paper's mechanism claim: the improvement was a code-level invariant from gradient pressure, not a hyperparameter, and it never showed up in any scaffold edit.</p>
+
+    <h2>What each lever changes</h2>
+
+    <p><strong>Harness iteration produces externalised changes</strong> (new tools, tighter parsers, search procedures, retry policies) while the model checkpoint stays fixed. Across tasks the Feedback-Agent built an SVC re-ranker on LawBench, a compilation-error parser and timing harness on TriMul, and a batched configuration driver on denoising. All software-engineering improvements to how the scaffold mediates between model and environment.</p>
+
+    <p><strong>Weight updates produce internalised knowledge</strong>, domain-specific patterns baked into the model's parameters that no scaffold edit reaches. On LawBench, sharper disambiguation of adjacent charge categories with no prompt hint. On TriMul, H100-specific kernel patterns the base model never produced regardless of scaffold quality. On denoising, the <code class="inline">np.clip</code> + <code class="inline">np.rint</code> invariant.</p>
+
+    <h2>Where SIA sits among prior work</h2>
+
+    <p>The paper classifies systems on two axes: does it edit the harness, and does it edit the weights? SIA claims to be the only entry that does both in a single self-improving loop.</p>
+
+    <div class="tablewrap" role="figure" aria-label="Comparison of self-improving systems">
+      <div class="panel-eyebrow">The two-axis map</div>
+      <table>
+        <thead><tr><th>System</th><th>Edits harness</th><th>Edits weights</th></tr></thead>
+        <tbody>
+          <tr><td class="best">SIA (this paper)</td><td>Yes</td><td>Yes</td></tr>
+          <tr><td>Hyperagents</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Darwin Gödel Machine</td><td>Yes</td><td>No</td></tr>
+          <tr><td>Meta-Harness</td><td>Yes</td><td>No</td></tr>
+          <tr><td>EUREKA</td><td>Partial</td><td>Yes</td></tr>
+          <tr><td>TTRL / Discover-TTT</td><td>No</td><td>Yes</td></tr>
+          <tr><td>STaR</td><td>No</td><td>Yes</td></tr>
+          <tr><td>ReAct</td><td>No</td><td>No</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The closest neighbours: Hyperagents makes the meta-mechanism itself editable but keeps weights fixed. EUREKA combines an LLM-generated reward function with RL training, but the loop is one-directional, the reward generator isn't updated by the trained policy. SIA's Feedback-Agent instead selects between scaffold and weight updates in a closed loop, each informed by trajectories from the current state of both components.</p>
+
+    <h2>Limitations</h2>
+
+    <p>The paper flags one sharp limitation: <strong>coupled co-evolutionary Goodhart.</strong> Both levers optimise against the same fixed verifier V, and each pass reshapes the distribution the other sees. The harness finds scaffolds easy for the current policy to exploit; the weights train on data collected through a scaffold that is about to change. The joint fixed point is a Nash equilibrium between two optimisers blind to each other's update history, not a point that maximises V on out-of-distribution scaffolds or novel policies. So the reported gains carry a robustness asterisk: they are measured against the same verifier both levers optimised against, and generalisation is not established.</p>
+
+    <h2>Future work</h2>
+    <p>The authors propose two directions. The first, <strong>meta-RL over the action-selection policy</strong>, is the one that matters for recursive self-improvement: the Feedback-Agent currently picks between harness and weight updates with a frozen LLM prior. The principled version treats the selector itself as learnable, running SIA across a distribution of tasks, treating each (trajectory, action, outcome) triple as a transition in an outer MDP, and training the selector via RL on it. That would make the improvement mechanism itself self-improving, a genuinely recursive structure with open stability questions distinct from single-level RL. The second, <strong>finer-grained interleaving</strong>, would let the Feedback-Agent trigger a weight update mid-harness-search or resume harness exploration right after a gradient step, cutting the lag between detecting a plateau and reacting to it.</p>
+
+    <h2>Learnings</h2>
+    <ol class="body">
+      <li><strong>Two orthogonal levers beat one, because they live in different change spaces.</strong> Scaffold edits top out at software-engineering hygiene; weight edits reach domain knowledge no prompt can encode. The <code class="inline">np.clip</code>+<code class="inline">np.rint</code> example is the cleanest proof.</li>
+      <li><strong>Trajectory-level feedback, not metric-level, is what makes the Feedback-Agent work.</strong> Full execution logs let it diagnose failure modes and choose between PPO, GRPO, and entropic weighting. A system conditioned only on accuracy could not.</li>
+      <li><strong>Algorithm selection can be delegated to an LLM agent, keyed to reward shape.</strong> The mapping from reward structure to RL method is a reusable heuristic independent of SIA's loop.</li>
+      <li><strong>The verifier is the foundation and the weakness.</strong> Full autonomy keys off a deterministic verifier, but coupled Goodhart shows the cost: both optimisers can collude against the same target. Verifier robustness bounds the trustworthiness of any gain.</li>
+      <li><strong>The recursion is shallow today, but the design points deeper.</strong> SIA improves the artifact (scaffold + weights). The proposed meta-RL extension would improve the improver. That distinction is the right axis for comparing RSI architectures.</li>
+    </ol>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>First system to combine harness and weight updates in one autonomous loop, with a clean ablation isolating each lever.</li>
+          <li>Strong, consistent gains across three unrelated domains, with comparison to prior SOTA and to Codex / Claude Code.</li>
+          <li>Honest, well-articulated coupled-Goodhart limitation rather than a hand-wave.</li>
+          <li>Concrete mechanism story backed by specific observed changes, not just metrics.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>All gains measured against the same verifier both levers optimised against; no out-of-distribution robustness check.</li>
+          <li>Only three algorithm choices demonstrated, one per task; selection logic not ablated.</li>
+          <li>One base model and one LoRA config; no evidence on scaling.</li>
+          <li>Strong proprietary meta-model (Sonnet 4.6); its contribution is unexamined.</li>
+          <li>N=3 tasks, single runs per operating point; no variance analysis.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary of terms">
+      <div class="panel-eyebrow">Less-obvious terms</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Harness / scaffold</td><td>The fixed, non-weight code around a model: prompt, tool dispatch, parsers, retry logic</td></tr>
+          <tr><td class="mono">LoRA</td><td>Low-rank adapter trained on a frozen base model, so weight updates touch a small parameter set</td></tr>
+          <tr><td class="mono">GAE</td><td>Generalised advantage estimation, the per-token advantage signal PPO uses</td></tr>
+          <tr><td class="mono">GRPO</td><td>Group-relative policy optimisation; normalises advantages within a rollout group, dropping the value network</td></tr>
+          <tr><td class="mono">Entropic weighting</td><td>Softmax reweighting of rollouts by reward with an adaptive temperature, for sparse high-signal rewards</td></tr>
+          <tr><td class="mono">Coupled Goodhart</td><td>Two optimisers targeting one metric, each distorting the distribution the other learns from, yielding fixed points strong on the metric but fragile off it</td></tr>
+          <tr><td class="mono">TriMul</td><td>Triangular multiplicative update, a pairwise-feature operation in AlphaFold2's Evoformer</td></tr>
+          <tr><td class="mono">mse_norm</td><td>Normalised reconstruction-quality score for the denoising task; higher is better, 1.0 is perfect</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Source</h2>
+      <ul>
+        <li>Hebbar, Manawat et al., SIA: Self Improving AI with Harness &amp; Weight Updates, Hexo Labs / University of Oxford (2026) · arXiv:2605.27276v2</li>
+        <li>Local copy · <code class="inline">papers/SIA- Self Improving AI with Harness &amp; Weight Updates.pdf</code></li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="index.html"><div><div class="label">Back to</div><div class="title">All research papers</div></div></a>
+      <div class="next spacer"></div>
+    </div>
+  </article>
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

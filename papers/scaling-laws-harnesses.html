@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scaling Laws for Agent Harnesses via Effective Feedback Compute · Research Papers</title>
+<meta name="description" content="A deep-dive reading note on Effective Feedback Compute, a trace-level scaling coordinate that predicts agent harness success far better than raw compute.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a class="active" href="scaling-laws-harnesses.html" aria-current="page"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Paper Deep-Dive</div>
+    <h1>Scaling Laws for Agent Harnesses via Effective Feedback Compute</h1>
+    <p class="standfirst">Counting tokens, tool calls, and wall time barely predicts whether an agent succeeds. Count only the feedback that is informative, valid, non-redundant, and retained, and the scaling law snaps into focus.</p>
+    <div class="byline">
+      <span>Zhang, Wang, Xu et al. · Harbin Institute of Technology</span>
+      <span>arXiv:2605.29682</span>
+      <span>May 2026</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>Authors</dt><dd>Xuanliang Zhang, Dingzirui Wang, Keyan Xu, Qingfu Zhu, Wanxiang Che (Harbin Institute of Technology)</dd>
+        <dt>Method</dt><dd>Effective Feedback Compute (EFC), a trace-level scaling coordinate</dd>
+        <dt>Evidence</dt><dd>Synthetic controllable tasks, executable code tasks, real benchmark traces, held-out splits, a prospective batch</dd>
+        <dt>Tags</dt><dd>Scaling laws · test-time scaling · harness analysis · feedback quality · measurement</dd>
+      </dl>
+    </div>
+
+    <p class="lede">A harness decides how a model calls tools, receives feedback, verifies intermediate states, stores memory, and revises solutions, which makes harness design a form of test-time scaling. But the usual scaling analyses parameterize that process by raw expenditure: tokens, tool calls, operations, wall time, cost. None of those distinguishes useful feedback from redundant or unstable interaction. This paper introduces Effective Feedback Compute (EFC), a trace-level coordinate that credits feedback only when it is informative, valid, non-redundant, and retained for later decisions, normalized by task demand when comparing tasks with different feedback needs.</p>
+
+    <p>The payoff is a much better scaling law. Raw tokens and tool calls explain limited variation in failure rate (R2 of 0.33 and 0.42); a strong multivariate baseline reaches 0.88; EFC-based coordinates reach 0.94, and task-demand-normalized Oracle-EFC reaches 0.99. The conclusion: harness scaling is governed less by how much computation is spent than by how efficiently raw budget is converted into durable, task-sufficient feedback.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>Test-time scaling lets you spend inference-time compute to get evidence from the environment instead of growing the model. But unlike pretraining, where model size and data are clean axes, harness scaling has no good coordinate. Measuring raw budget treats a useful verification and a redundant retry as equal, so the scaling curve is noisy and the lessons are unreliable. If you cannot measure the right thing, you cannot say whether spending more helps, and you certainly cannot compare harnesses fairly.</p>
+
+    <div class="callout">
+      <p>Not all compute is feedback, and not all feedback is useful. Credit only the feedback that is informative, valid, non-redundant, and retained, and harness scaling becomes predictable.</p>
+    </div>
+
+    <h2>How it works</h2>
+
+    <p>EFC measures the amount of feedback a trace actually puts to work. A unit of interaction counts toward EFC only if it clears four tests: it is informative (it changes what the agent knows), valid (it is correct, not a hallucinated or erroneous signal), non-redundant (it adds something not already known), and retained (it is carried into later decisions rather than forgotten). Two derived quantities follow. Harness efficiency, EFC divided by raw compute, measures how much effective feedback a harness extracts per unit of budget. Task-demand normalization, EFC divided by task demand, measures whether the extracted feedback is sufficient for the task at hand.</p>
+
+    <div class="fig" role="figure" aria-label="What counts as effective feedback">
+      <div class="panel-eyebrow">The four-test filter on feedback</div>
+      <div class="mermaid">
+flowchart TD
+    RAW["Raw interaction:<br/>a tool call, an observation"] --> T1{"Informative?"}
+    T1 -->|"no"| DROP["Not counted"]
+    T1 -->|"yes"| T2{"Valid?"}
+    T2 -->|"no"| DROP
+    T2 -->|"yes"| T3{"Non-redundant?"}
+    T3 -->|"no"| DROP
+    T3 -->|"yes"| T4{"Retained for<br/>later decisions?"}
+    T4 -->|"no"| DROP
+    T4 -->|"yes"| EFC["Counts toward EFC"]
+      </div>
+      <div class="caption">Only feedback passing all four tests is credited. NRS-EFC (non-redundant stable EFC) emphasizes retained feedback over transient signals, for settings without oracle state access.</div>
+    </div>
+
+    <p>For real settings without oracle access to the environment state, the paper provides Estimated-EFC (recoverable from the trace before the outcome is known) and NRS-EFC (non-redundant stable EFC, emphasizing retained over transient feedback). The decomposition is the conceptual core: harness design controls the raw-to-EFC conversion (efficiency), while the task sets the demand, and success depends on both extracting effective feedback and having enough of it relative to demand.</p>
+
+    <div class="fig" role="figure" aria-label="Why the coordinate works">
+      <div class="panel-eyebrow">Two factors that decide success</div>
+      <div class="mermaid">
+flowchart LR
+    RAWB["Raw budget"] --> CONV["Harness efficiency<br/>eta = EFC / raw"]
+    CONV --> EFCV["Effective feedback (EFC)"]
+    DEMAND["Task demand"] --> SUFF["Sufficiency<br/>EFC / Dtask"]
+    EFCV --> SUFF
+    SUFF --> SUCCESS["Success rate"]
+      </div>
+      <div class="caption">A harness must both convert budget into effective feedback and supply enough of it for the task. Efficiency alone explains success with R2 = 0.97 in the controlled setting; raw cost explains almost none.</div>
+    </div>
+
+    <h2>Results</h2>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">0.33 to 0.99</div><div class="label">Failure-rate R2: raw tokens vs Oracle-EFC normalized by task demand</div></div>
+      <div class="receipt"><div class="num">0.27 to 0.90</div><div class="label">Success from improving feedback quality alone, with raw cost and tool calls held fixed</div></div>
+      <div class="receipt"><div class="num">R2 = 0.85</div><div class="label">NRS-EFC/Dtask on a prospective held-out batch, still the best predictor</div></div>
+    </div>
+
+    <div class="tablewrap" role="figure" aria-label="Predictive fit by coordinate">
+      <div class="panel-eyebrow">How well each coordinate predicts failure (R2, controlled setting)</div>
+      <table>
+        <thead><tr><th>Coordinate</th><th>R2</th></tr></thead>
+        <tbody>
+          <tr><td>Raw tokens</td><td class="mono">0.33</td></tr>
+          <tr><td>Raw tool calls</td><td class="mono">0.42</td></tr>
+          <tr><td>SAS (multivariate baseline)</td><td class="mono">0.88</td></tr>
+          <tr><td>Oracle-EFC / Estimated-EFC</td><td class="mono">0.94</td></tr>
+          <tr><td>Oracle-EFC / Dtask</td><td class="mono best">0.99</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The matched-budget intervention is the clincher</h3>
+    <p>The most convincing result holds raw cost and tool calls fixed and varies only feedback quality. Success rises from 0.27 to 0.90. Same budget, same number of tool calls, radically different outcome, because the feedback the agent retained and used was better. This is direct causal evidence that the quantity to optimize is effective feedback, not spend. On mixed real traces, raw-compute baselines have near-zero or even negative fit while NRS-EFC/Dtask reaches 0.92, and Estimated-EFC/Dtask reaches 0.93 even when computed before the outcome is known, so the coordinate is usable predictively, not just in hindsight.</p>
+
+    <h2>What it changes</h2>
+    <p>This paper does not propose a harness; it proposes the right axis to measure one. That matters for the whole self-improvement program, because every harness-evolution method in this study optimizes against some success signal, and EFC explains what actually drives that signal. It reframes "spend more compute" into "convert budget into retained, valid, non-redundant feedback, and make sure there is enough for the task." For anyone building or evaluating a self-improving loop, EFC is a diagnostic: if a harness edit raised raw spend but not EFC, it should not be expected to help, and the data backs that up.</p>
+
+    <h2>Where it sits among prior work</h2>
+    <div class="tablewrap" role="figure" aria-label="Comparison with scaling coordinates">
+      <div class="panel-eyebrow">Scaling coordinates compared</div>
+      <table>
+        <thead><tr><th>Coordinate</th><th>What it counts</th><th>Predicts success?</th></tr></thead>
+        <tbody>
+          <tr><td>Tokens / tool calls / wall time</td><td>Raw expenditure</td><td>Weakly</td></tr>
+          <tr><td>SAS</td><td>Multivariate agent stats</td><td>Well (0.88)</td></tr>
+          <tr><td class="best">EFC / Dtask</td><td>Useful, retained feedback per task demand</td><td>Best (up to 0.99)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>Limitations</h2>
+    <p>Oracle-EFC needs access to the environment's true state to judge validity and informativeness, which is available in controlled and executable settings but not in general; the paper's answer is Estimated-EFC and NRS-EFC, which approximate it and predict slightly less well. The four properties (informative, valid, non-redundant, retained) require operational definitions that may not transfer cleanly to every domain, and efficiency is shown to be slice-dependent, so a single number does not capture every regime. As a measurement paper it predicts success rather than improving it, so the practical payoff depends on harness designers actually optimizing EFC. The prospective holdout (R2 = 0.85) is strong but lower than the in-distribution fits, the expected gap when moving to new data.</p>
+
+    <h2>Learnings</h2>
+    <ol class="body">
+      <li><strong>Measure feedback, not spend.</strong> The single most useful idea: raw compute is a bad scaling axis for harnesses because it counts redundant and invalid interaction equally. EFC fixes the axis, and the fit jumps from 0.33 to 0.99.</li>
+      <li><strong>Feedback quality is causal, not correlational.</strong> The matched-budget intervention (0.27 to 0.90 with budget fixed) is the cleanest demonstration that what the agent retains and uses, not how much it spends, drives success.</li>
+      <li><strong>Normalize by task demand.</strong> Enough feedback for an easy task is too little for a hard one; dividing EFC by demand is what makes the coordinate comparable across tasks.</li>
+      <li><strong>This is the missing yardstick for self-improvement loops.</strong> For the RSI study, EFC gives a principled way to ask whether a harness edit actually helped: did it raise effective feedback, or just cost. A loop that cannot prove gain per effective-feedback unit is the cost liability the book warns about.</li>
+    </ol>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Large, consistent predictive improvement over raw compute and a strong multivariate baseline.</li>
+          <li>A matched-budget intervention gives causal, not just correlational, evidence.</li>
+          <li>Estimated-EFC works before the outcome is known, so the coordinate is usable predictively.</li>
+          <li>Validated across synthetic, executable, real, held-out, and prospective settings.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>Oracle-EFC needs true-state access; estimates predict slightly less well.</li>
+          <li>The four feedback properties need operational definitions that may not transfer to all domains.</li>
+          <li>Efficiency is slice-dependent, so one number misses some regimes.</li>
+          <li>It measures success rather than improving it; the payoff needs designers to optimize EFC.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary of terms">
+      <div class="panel-eyebrow">Less-obvious terms</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">EFC</td><td>Effective Feedback Compute: feedback that is informative, valid, non-redundant, and retained</td></tr>
+          <tr><td class="mono">Harness efficiency (eta)</td><td>EFC divided by raw compute: how much useful feedback per unit of budget</td></tr>
+          <tr><td class="mono">Dtask</td><td>Task demand: how much feedback a task needs; used to normalize EFC</td></tr>
+          <tr><td class="mono">NRS-EFC</td><td>Non-redundant stable EFC, emphasizing retained over transient feedback</td></tr>
+          <tr><td class="mono">Estimated-EFC</td><td>EFC recoverable from the trace before the final outcome is known</td></tr>
+          <tr><td class="mono">SAS</td><td>A strong multivariate agent-statistics baseline the paper compares against</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Source</h2>
+      <ul>
+        <li>Zhang, Wang, Xu, Zhu, Che, Scaling Laws for Agent Harnesses via Effective Feedback Compute, Harbin Institute of Technology (2026) · <a href="https://arxiv.org/abs/2605.29682">arxiv.org/abs/2605.29682</a></li>
+        <li>Local copy · <code class="inline">papers/Scaling Laws for Agent Harnesses via Effective Feedback Compute.pdf</code></li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="fluxmem.html"><div><div class="label">Previous paper</div><div class="title">Rethinking Memory as Connectivity</div></div></a>
+      <a class="next" href="index.html"><div><div class="label">Back to</div><div class="title">All research papers</div></div></a>
+    </div>
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Research Papers · The RSI Book</title>
+<meta name="description" content="Architecture deep-dives on the research papers behind recursive self-improvement.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:48px;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:24px;font-weight:500;line-height:1.2;margin:56px 0 20px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+
+  .paper-list{display:flex;flex-direction:column;gap:20px;margin:32px 0}
+  a.paper-card{display:block;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;color:var(--ink)}
+  a.paper-card:hover{text-decoration:none;background:var(--card-hover);transform:translateY(-1px);transition:transform .15s ease}
+  .paper-card .top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:10px}
+  .paper-card .idx{font-family:'Geist Mono',monospace;font-size:13px;color:var(--accent-ink);letter-spacing:0.04em}
+  .paper-card .venue{font-family:'Geist Mono',monospace;font-size:12px;color:var(--ink-muted)}
+  .paper-card h3{font-size:22px;font-weight:600;line-height:1.25;margin-bottom:8px}
+  .paper-card p{font-size:16px;line-height:1.55;color:var(--ink-muted);margin:0}
+  .paper-card .tags{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px}
+  .paper-card .tag{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-muted);border:1px solid var(--hairline);border-radius:64px;padding:4px 12px}
+
+  .soon-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;opacity:0.72}
+  .soon-card .top{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:8px}
+  .soon-card .idx{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft)}
+  .soon-card .pill{font-family:'Geist Mono',monospace;font-size:11px;border:1px solid var(--hairline);border-radius:64px;padding:3px 12px;color:var(--ink-muted)}
+  .soon-card h3{font-size:18px;font-weight:500;line-height:1.3;color:var(--ink-muted)}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  @media (max-width:980px){
+    .shell{grid-template-columns:1fr;gap:32px;padding:32px 20px 64px}
+    aside.toc{position:static;display:none;max-height:none}
+    aside.toc.open{display:block}
+    #toc-toggle{display:inline-block}
+    article h1{font-size:34px}
+    .header-meta{display:none}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+  .shell.toc-hidden aside.toc{display:none}
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation">
+      <h3>The book</h3>
+      <ol>
+        <li><a href="../index.html"><span class="num">01</span>The State of Recursive Self-Improvement</a></li>
+        <li><a href="../chapters/ch02.html"><span class="num">02</span>Build your first agent improvement loop</a></li>
+      </ol>
+      <h3 class="section-gap">Research Papers</h3>
+      <ol>
+        <li><a href="index.html"><span class="num">★</span>All papers</a></li>
+        <li><a href="reasoningbank.html"><span class="num">01</span>ReasoningBank</a></li>
+        <li><a href="agent0.html"><span class="num">02</span>Agent0</a></li>
+        <li><a href="alma.html"><span class="num">03</span>ALMA: Meta-learned Memory</a></li>
+        <li><a href="posttrainbench.html"><span class="num">04</span>PostTrainBench</a></li>
+        <li><a href="bilevel-autoresearch.html"><span class="num">05</span>Bilevel Autoresearch</a></li>
+        <li><a href="agentic-harness-engineering.html"><span class="num">06</span>Agentic Harness Engineering</a></li>
+        <li><a href="life-harness.html"><span class="num">07</span>LIFE-HARNESS</a></li>
+        <li><a href="skillopt.html"><span class="num">08</span>SkillOpt</a></li>
+        <li><a href="sia.html"><span class="num">09</span>SIA: Harness &amp; Weight Updates</a></li>
+        <li><a href="fluxmem.html"><span class="num">10</span>FluxMem: Evolving Memory</a></li>
+        <li><a href="scaling-laws-harnesses.html"><span class="num">11</span>Scaling Laws for Harnesses</a></li>
+        <li><a href="meta-agent-challenge.html"><span class="num">12</span>Meta-Agent Challenge</a></li>
+        <li><a href="cl-bench.html"><span class="num">13</span>Continual Learning Bench</a></li>
+        <li><a href="self-harness.html"><span class="num">14</span>Self-Harness</a></li>
+        <li><a href="harnessx.html"><span class="num">15</span>HarnessX: Harness Foundry</a></li>
+      </ol>
+    </nav>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Companion</div>
+    <h1>Research Papers</h1>
+    <p class="standfirst">Architecture deep-dives on the research behind recursive self-improvement. Each note covers the method, the flow, the results, and what the paper actually teaches, with the diagrams rendered inline.</p>
+
+    <div class="paper-list">
+
+      <a class="paper-card" href="reasoningbank.html">
+        <div class="top">
+          <span class="idx">Paper 01</span>
+          <span class="venue">Google Cloud AI Research · arXiv:2509.25140 · 2025</span>
+        </div>
+        <h3>ReasoningBank: Scaling Agent Self-Evolving with Reasoning Memory</h3>
+        <p>Distills reusable reasoning strategies from an agent's own successes and failures, not raw traces. Beats prior memory designs and transfers across the hard cross-domain setting.</p>
+        <div class="tags">
+          <span class="tag">Agent memory</span>
+          <span class="tag">Self-judged</span>
+          <span class="tag">Test-time scaling</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="agent0.html">
+        <div class="top">
+          <span class="idx">Paper 02</span>
+          <span class="venue">UNC / Salesforce / Stanford · arXiv:2511.16043 · 2025</span>
+        </div>
+        <h3>Agent0: Self-Evolving Agents from Zero Data via Tool-Integrated Reasoning</h3>
+        <p>A curriculum agent and an executor agent, spun from one base model, co-evolve with tools and no human data. Lifts Qwen3-8B math by 18% and general reasoning by 24%.</p>
+        <div class="tags">
+          <span class="tag">Co-evolution</span>
+          <span class="tag">Zero data</span>
+          <span class="tag">Tool use</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="alma.html">
+        <div class="top">
+          <span class="idx">Paper 03</span>
+          <span class="venue">UBC · arXiv:2602.07755 · 2026</span>
+        </div>
+        <h3>Learning to Continually Learn via Meta-learning Agentic Memory Designs</h3>
+        <p>A meta-agent searches over agent memory designs written as code. The discovered designs beat human-crafted memory on all four domains and transfer to a stronger model.</p>
+        <div class="tags">
+          <span class="tag">Meta-learning</span>
+          <span class="tag">Memory design</span>
+          <span class="tag">Open-ended search</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="posttrainbench.html">
+        <div class="top">
+          <span class="idx">Paper 04</span>
+          <span class="venue">EPFL / Tübingen · arXiv:2603.08640 · 2026</span>
+        </div>
+        <h3>PostTrainBench: Can LLM Agents Automate LLM Post-Training?</h3>
+        <p>Frontier agents post-train a model autonomously in 10 hours on one GPU. Best agent hits 23.2% vs 51.1% for human experts, and some cheat with test-set training and stray API keys.</p>
+        <div class="tags">
+          <span class="tag">Benchmark</span>
+          <span class="tag">Post-training</span>
+          <span class="tag">Reward hacking</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="bilevel-autoresearch.html">
+        <div class="top">
+          <span class="idx">Paper 05</span>
+          <span class="venue">Qu & Lu · arXiv:2603.23420 · 2026</span>
+        </div>
+        <h3>Bilevel Autoresearch: Meta-Autoresearching Itself</h3>
+        <p>An outer loop reads the inner autoresearch loop's code and writes new search mechanisms as Python at runtime. Mechanism research gives a 5x gain over the inner loop alone.</p>
+        <div class="tags">
+          <span class="tag">Autoresearch</span>
+          <span class="tag">Bilevel</span>
+          <span class="tag">Code generation</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="agentic-harness-engineering.html">
+        <div class="top">
+          <span class="idx">Paper 06</span>
+          <span class="venue">Fudan / Peking · arXiv:2604.25850 · 2026</span>
+        </div>
+        <h3>Agentic Harness Engineering: Observability-Driven Automatic Evolution</h3>
+        <p>Three observability pillars turn every harness edit into a falsifiable contract. Lifts Terminal-Bench 2 from 69.7% to 77.0% and transfers across model families.</p>
+        <div class="tags">
+          <span class="tag">Harness evolution</span>
+          <span class="tag">Observability</span>
+          <span class="tag">Falsifiable edits</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="life-harness.html">
+        <div class="top">
+          <span class="idx">Paper 07</span>
+          <span class="venue">Peking University · arXiv:2605.22166 · 2026</span>
+        </div>
+        <h3>Adapting the Interface, Not the Model (LIFE-HARNESS)</h3>
+        <p>Freezes the model and evolves a lifecycle-aware harness. Improves 116 of 126 settings at 88.5% average relative gain, and a harness evolved on a 4B model transfers to 17 others.</p>
+        <div class="tags">
+          <span class="tag">Harness adaptation</span>
+          <span class="tag">Frozen model</span>
+          <span class="tag">Transfer</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="skillopt.html">
+        <div class="top">
+          <span class="idx">Paper 08</span>
+          <span class="venue">Microsoft / SJTU · arXiv:2605.23904 · 2026</span>
+        </div>
+        <h3>SkillOpt: Executive Strategy for Self-Evolving Agent Skills</h3>
+        <p>Trains a skill document like a parameter: bounded edits, a learning-rate budget, a held-out gate. Best or tied on all 52 cells, +24.8 points on GPT-5.5 inside Codex.</p>
+        <div class="tags">
+          <span class="tag">Agent skills</span>
+          <span class="tag">Text-space optimizer</span>
+          <span class="tag">Transfer</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="sia.html">
+        <div class="top">
+          <span class="idx">Paper 09</span>
+          <span class="venue">Hexo Labs · arXiv:2605.27276 · 2026</span>
+        </div>
+        <h3>SIA: Self Improving AI with Harness &amp; Weight Updates</h3>
+        <p>A Feedback-Agent updates both the harness and the model weights in one loop. Beats scaffold-only iteration on three unrelated tasks and clears prior SOTA on all three.</p>
+        <div class="tags">
+          <span class="tag">Harness + weights</span>
+          <span class="tag">Test-time RL</span>
+          <span class="tag">Feedback-Agent</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="fluxmem.html">
+        <div class="top">
+          <span class="idx">Paper 10</span>
+          <span class="venue">Zhejiang University / Alibaba · arXiv:2605.28773 · 2026</span>
+        </div>
+        <h3>Rethinking Memory as Continuously Evolving Connectivity (FluxMem)</h3>
+        <p>Models memory as a heterogeneous graph and evolves its topology, repairing links, pruning interference, and distilling recurring successes into reusable circuits. SOTA on three benchmarks.</p>
+        <div class="tags">
+          <span class="tag">Agent memory</span>
+          <span class="tag">Evolving graph</span>
+          <span class="tag">Procedural circuits</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="scaling-laws-harnesses.html">
+        <div class="top">
+          <span class="idx">Paper 11</span>
+          <span class="venue">Harbin Institute of Technology · arXiv:2605.29682 · 2026</span>
+        </div>
+        <h3>Scaling Laws for Agent Harnesses via Effective Feedback Compute</h3>
+        <p>Counts only feedback that is informative, valid, non-redundant, and retained. This coordinate predicts success far better than raw compute (R2 up to 0.99 vs 0.33).</p>
+        <div class="tags">
+          <span class="tag">Scaling laws</span>
+          <span class="tag">Feedback quality</span>
+          <span class="tag">Measurement</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="meta-agent-challenge.html">
+        <div class="top">
+          <span class="idx">Paper 12</span>
+          <span class="venue">CAS Institute of Software / Ant Group · arXiv:2606.04455 · 2026</span>
+        </div>
+        <h3>The Meta-Agent Challenge: Are Current Agents Capable of Autonomous Agent Development?</h3>
+        <p>A meta-agent builds agents against a held-out set. Only 5 of 39 configs beat a human baseline, and one model exfiltrated ground-truth labels under optimization pressure.</p>
+        <div class="tags">
+          <span class="tag">Benchmark</span>
+          <span class="tag">Autonomous dev</span>
+          <span class="tag">Reward hacking</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="cl-bench.html">
+        <div class="top">
+          <span class="idx">Paper 13</span>
+          <span class="venue">UC Berkeley / Snorkel AI · arXiv:2606.05661 · 2026</span>
+        </div>
+        <h3>Continual Learning Bench: Evaluating Frontier AI in Stateful Environments</h3>
+        <p>Introduces a gain metric that runs each sequence stateful and stateless to isolate learning from capability. Plain in-context learning beats dedicated memory systems.</p>
+        <div class="tags">
+          <span class="tag">Benchmark</span>
+          <span class="tag">Gain metric</span>
+          <span class="tag">Continual learning</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="self-harness.html">
+        <div class="top">
+          <span class="idx">Paper 14</span>
+          <span class="venue">Shanghai AI Laboratory · arXiv:2606.09498 · 2026</span>
+        </div>
+        <h3>Self-Harness: Harnesses That Improve Themselves</h3>
+        <p>The operating model improves its own harness, no human engineer or stronger external model. Mines its own weaknesses into minimal, regression-tested edits across three model families.</p>
+        <div class="tags">
+          <span class="tag">Self-evolving harness</span>
+          <span class="tag">Weakness mining</span>
+          <span class="tag">Regression-gated</span>
+        </div>
+      </a>
+
+      <a class="paper-card" href="harnessx.html">
+        <div class="top">
+          <span class="idx">Paper 15</span>
+          <span class="venue">Darwin Agent Team · arXiv:2606.14249 · 2026</span>
+        </div>
+        <h3>HarnessX: A Composable, Adaptive, and Evolvable Agent Harness Foundry</h3>
+        <p>Treats the harness as a typed object: composes it from processors, evolves it from traces under RL-inspired guardrails (AEGIS), and co-evolves the model. +14.5% average across five benchmarks.</p>
+        <div class="tags">
+          <span class="tag">Composable harness</span>
+          <span class="tag">AEGIS</span>
+          <span class="tag">Co-evolution</span>
+        </div>
+      </a>
+
+    </div>
+
+    <h2>How to read these</h2>
+    <p>Every note follows the same shape: a one-paragraph summary, the problem the paper attacks, a flow diagram of the architecture, the results in a table, what each design choice changes, where it sits among prior work, the limitations, and a learnings plus pros-and-cons close. The goal is to make the papers comparable to each other, not just readable on their own.</p>
+
+  </article>
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  btn.addEventListener('click', () => {
+    const open = toc.classList.toggle('open');
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  try{ if(localStorage.getItem('rsi_sidebar') === 'hidden') shell.classList.add('toc-hidden'); }catch(e){}
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = shell.classList.toggle('toc-hidden');
+      try{ localStorage.setItem('rsi_sidebar', hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>

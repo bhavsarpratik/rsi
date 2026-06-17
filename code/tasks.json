@@ -1,0 +1,15 @@
+[
+  {"split": "train", "question": "How many units of SKU-202 do we have in stock?", "expected": "84"},
+  {"split": "train", "question": "How many units of SKU-101 do we have?", "expected": "48"},
+  {"split": "train", "question": "In which month was SKU-101 added?", "expected": "January"},
+  {"split": "train", "question": "In which month was SKU-202 added?", "expected": "November"},
+  {"split": "train", "question": "Is SKU-101 currently in our catalog? Answer yes or no.", "expected": "no"},
+  {"split": "train", "question": "Is SKU-303 currently in our catalog? Answer yes or no.", "expected": "yes"},
+  {"split": "train", "question": "How many units of SKU-303 do we have?", "expected": "144"},
+  {"split": "train", "question": "Which has more units in stock, SKU-101 or SKU-202?", "expected": "SKU-202"},
+
+  {"split": "test", "question": "How many units of SKU-404 do we have in stock?", "expected": "108"},
+  {"split": "test", "question": "In which month was SKU-404 added?", "expected": "March"},
+  {"split": "test", "question": "Is SKU-404 currently in our catalog? Answer yes or no.", "expected": "no"},
+  {"split": "test", "question": "Is SKU-505 currently in our catalog? Answer yes or no.", "expected": "yes"}
+]
