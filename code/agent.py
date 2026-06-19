@@ -2,7 +2,7 @@
 import json
 import litellm
 
-MODEL = "openai/gpt-4o-mini"  # swap for any model litellm supports
+MODEL = "openai/gpt-4.1-nano"  # swap for any model litellm supports
 
 SEED_PROMPT = "You are a warehouse assistant. Use the lookup tool to answer questions. Be concise."
 
