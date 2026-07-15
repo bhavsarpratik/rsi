@@ -172,12 +172,12 @@
   .toc-scrim{position:fixed;inset:0;z-index:44;background:rgba(0,8,27,0.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
   .toc-scrim.show{opacity:1;pointer-events:auto}
   body.drawer-open{overflow:hidden}
-  @media (min-width:1181px){
+  @media (min-width:981px){
     .toc-scrim{display:none}
     .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
     .shell.toc-hidden aside.toc{display:none}
   }
-  @media (max-width:1180px){
+  @media (max-width:980px){
     .shell{grid-template-columns:minmax(0,1fr);gap:28px;padding:24px 20px 64px}
     aside.toc{position:fixed;top:0;left:0;z-index:45;width:min(86vw,320px);height:100dvh;max-height:none;margin:0;padding:78px 16px 28px;background:var(--canvas);border-right:1px solid var(--hairline);box-shadow:2px 0 28px rgba(0,0,0,0.22);transform:translateX(-100%);transition:transform .25s ease;overflow-y:auto;display:block}
     aside.toc.open{transform:translateX(0)}
@@ -235,7 +235,7 @@
   .iconbtn .sun{display:none}
   html[data-theme="dark"] .iconbtn .moon{display:none}
   html[data-theme="dark"] .iconbtn .sun{display:block}
-  @media (max-width:1180px){ #sidebar-toggle{display:none} }
+  @media (max-width:980px){ #sidebar-toggle{display:none} }
 </style>
 <link rel="stylesheet" href="../assets/responsive.css">
 <script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
