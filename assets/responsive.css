@@ -1,0 +1,243 @@
+/*
+ * Shared responsive guardrails for every chapter and research note.
+ * Keep this file loaded after each page's inline styles so these rules win
+ * over older page-specific desktop declarations.
+ */
+
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+.site-inner,
+.shell,
+.lockup,
+.header-right,
+article,
+article > *,
+.pc > *,
+.receipts > *,
+.nextrow > *,
+.meta-card,
+.fig,
+.loop,
+.tablewrap,
+.codeblock,
+.out {
+  min-width: 0;
+}
+
+.lockup {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.book-tag {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-right {
+  flex: 0 0 auto;
+}
+
+article,
+article > *,
+img,
+video,
+iframe,
+svg {
+  max-width: 100%;
+}
+
+article a,
+.refs li,
+dd,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+pre {
+  max-width: 100%;
+}
+
+.tablewrap,
+.codeblock pre,
+.out pre,
+.loop pre,
+.fig .mermaid,
+.source-image-link {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 980px) {
+  .shell,
+  .shell.toc-hidden {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  article {
+    width: 100%;
+    max-width: none;
+  }
+
+  .shell.toc-hidden aside.toc {
+    display: block;
+  }
+
+  .pc,
+  .receipts,
+  .nextrow {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .nextrow .spacer {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .site-inner {
+    padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left));
+    gap: 8px;
+  }
+
+  .header-right {
+    gap: 6px;
+  }
+
+  .book-tag {
+    font-size: 12px;
+    letter-spacing: 0;
+  }
+
+  .iconbtn {
+    width: 40px;
+    height: 40px;
+  }
+
+  #toc-toggle {
+    min-height: 40px;
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .shell {
+    gap: 20px;
+    padding: 24px max(16px, env(safe-area-inset-right)) 56px max(16px, env(safe-area-inset-left));
+  }
+
+  article h1 {
+    font-size: clamp(29px, 8.5vw, 36px);
+    line-height: 1.1;
+  }
+
+  article h2 {
+    font-size: clamp(23px, 6.5vw, 28px);
+    margin-top: 48px;
+  }
+
+  article h3 {
+    font-size: 19px;
+  }
+
+  .standfirst,
+  article p.lede {
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  article p,
+  article ul.body li,
+  article ol.body li {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .byline {
+    margin-bottom: 36px;
+  }
+
+  .fig,
+  .loop,
+  .tablewrap,
+  .meta-card,
+  .pc .col,
+  .receipt,
+  .recap {
+    padding: 18px;
+    border-radius: var(--r-md);
+  }
+
+  .fig,
+  .loop,
+  .tablewrap,
+  .pc,
+  .receipts {
+    margin-top: 32px;
+    margin-bottom: 32px;
+  }
+
+  .loop .panel-eyebrow,
+  .fig .panel-eyebrow {
+    padding-right: 64px;
+  }
+
+  .codeblock pre,
+  .out pre,
+  .loop pre {
+    font-size: 12.5px;
+    line-height: 1.6;
+  }
+
+  .nextrow {
+    margin-top: 48px;
+  }
+
+  .next,
+  .nextrow a.next {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+
+  .next .title,
+  .nextrow .title {
+    font-size: 17px;
+  }
+
+  .foot-inner {
+    padding: 24px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+  }
+}
+
+@media (max-width: 380px) {
+  .site-inner {
+    gap: 6px;
+  }
+
+  .header-right {
+    gap: 4px;
+  }
+
+  .iconbtn {
+    width: 38px;
+    height: 38px;
+  }
+
+  #toc-toggle {
+    min-height: 38px;
+    padding-inline: 10px;
+  }
+
+  .shell {
+    padding-inline: 14px;
+  }
+}

@@ -103,4 +103,30 @@
   });
 
   mount.replaceChildren(fragment);
+
+  function closeMobileDrawer() {
+    const toc = document.getElementById('toc');
+    const button = document.getElementById('toc-toggle');
+    const scrim = document.querySelector('.toc-scrim');
+
+    if (toc) toc.classList.remove('open');
+    if (scrim) scrim.classList.remove('show');
+    document.body.classList.remove('drawer-open');
+    if (button) {
+      button.setAttribute('aria-expanded', 'false');
+      button.textContent = 'Contents';
+    }
+  }
+
+  const desktop = window.matchMedia('(min-width: 981px)');
+  const handleViewportChange = function (event) {
+    if (event.matches) closeMobileDrawer();
+  };
+
+  if (desktop.addEventListener) desktop.addEventListener('change', handleViewportChange);
+  else desktop.addListener(handleViewportChange);
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeMobileDrawer();
+  });
 })();
