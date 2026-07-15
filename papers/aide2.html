@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
+<title>AIDE²: Evidence for Net-Positive Recursive Self-Improvement · Research Papers</title>
+<meta name="description" content="A critical deep-dive on Weco AI's AIDE² report: a fixed-cost outer loop that evolved an autoresearch harness, transferred to unseen tasks, and did not yet achieve ignition.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#F5F6F8;
+    --surface:#F5F6F7;
+    --ink:#00081B;
+    --ink-muted:rgba(0,8,27,0.62);
+    --ink-soft:rgba(0,8,27,0.5);
+    --accent:#40C2FA;
+    --accent-ink:#0E7CB0;
+    --hairline:rgba(0,8,27,0.10);
+    --card-shadow:#FFFFFF -2px -2px 4px, rgba(156,160,164,0.52) 2px 2px 2px;
+    --header-bg:rgba(245,246,248,0.92);
+    --card-hover:#FFFFFF;
+    --nav-hover:rgba(0,8,27,0.04);
+    --code-bg:rgba(0,8,27,0.05);
+    --r-lg:32px; --r-md:24px; --r-sm:16px;
+  }
+  html[data-theme="dark"]{
+    --canvas:#0B0F1A;
+    --surface:#141B2B;
+    --ink:#EAEEF6;
+    --ink-muted:rgba(234,238,246,0.66);
+    --ink-soft:rgba(234,238,246,0.48);
+    --accent:#40C2FA;
+    --accent-ink:#7FD4FB;
+    --hairline:rgba(234,238,246,0.13);
+    --card-shadow:rgba(255,255,255,0.03) -1px -1px 2px, rgba(0,0,0,0.55) 2px 2px 6px;
+    --header-bg:rgba(11,15,26,0.9);
+    --card-hover:#1C2538;
+    --nav-hover:rgba(234,238,246,0.07);
+    --code-bg:rgba(234,238,246,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{transition:none!important} }
+  body{
+    background:var(--canvas); color:var(--ink);
+    font-family:'Geist',system-ui,-apple-system,sans-serif;
+    font-size:16px; line-height:1.65; -webkit-font-smoothing:antialiased;
+    transition:background .25s ease, color .25s ease;
+  }
+  h1,h2,h3{text-wrap:balance}
+  p,li{text-wrap:pretty}
+  pre{max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+  a{color:var(--accent-ink);text-decoration:none}
+  a:hover{text-decoration:underline}
+  a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+
+  #progress{position:fixed;top:0;left:0;height:2px;width:0;background:var(--accent);z-index:60}
+
+  header.site{
+    position:sticky;top:0;z-index:50;
+    background:var(--header-bg);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .site-inner{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+  .lockup{display:flex;align-items:baseline;gap:12px}
+  .wordmark{font-weight:600;font-size:20px;letter-spacing:-0.02em}
+  .lockup .divider{color:var(--ink-soft)}
+  .book-tag{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);letter-spacing:0.04em}
+  .header-meta{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  #toc-toggle{display:none;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;padding:8px 16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink);cursor:pointer}
+
+  .shell{max-width:1280px;margin:0 auto;display:grid;grid-template-columns:336px minmax(0,1fr);gap:64px;padding:48px 32px 96px}
+
+  aside.toc{position:sticky;top:88px;align-self:start;height:fit-content;max-height:calc(100vh - 112px);overflow-y:auto;padding-right:6px;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  aside.toc::-webkit-scrollbar{width:8px}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--hairline);border-radius:8px}
+  aside.toc::-webkit-scrollbar-track{background:transparent}
+  .cover{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:28px 28px 24px;margin-bottom:28px}
+  .cover .eyebrow{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft)}
+  .cover h2{font-size:23px;font-weight:600;line-height:1.2;letter-spacing:-0.01em;margin:10px 0 0}
+  .cover p{font-size:16px;color:var(--ink-muted);line-height:1.5}
+  .cover .edition{margin-top:16px;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+  nav.chapters h3{font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 10px 14px;font-weight:500}
+  nav.chapters h3.section-gap{margin-top:28px;padding-top:24px;border-top:1px solid var(--hairline)}
+  nav.chapters ol{list-style:none}
+  nav.chapters li{margin-bottom:2px}
+  nav.chapters a, nav.chapters .soon{position:relative;display:flex;gap:12px;align-items:baseline;padding:9px 14px;border-radius:var(--r-sm);font-size:15.5px;color:var(--ink-muted);line-height:1.45;transition:color .15s ease,background .15s ease}
+  nav.chapters a:hover{text-decoration:none;background:var(--nav-hover);color:var(--ink)}
+  nav.chapters a.active{background:var(--nav-hover);color:var(--ink);font-weight:500}
+  nav.chapters a.active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:18px;border-radius:3px;background:var(--accent)}
+  nav.chapters .num{font-family:'Geist Mono',monospace;font-size:13px;color:var(--ink-soft);min-width:22px;font-variant-numeric:tabular-nums;flex:none}
+  nav.chapters a:hover .num{color:var(--ink-muted)}
+  nav.chapters a.active .num{color:var(--accent-ink)}
+  nav.chapters .soon{color:var(--ink-soft);cursor:default}
+  nav.chapters .soon .pill{margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px;border:1px solid var(--hairline);border-radius:64px;padding:2px 10px}
+
+  article{max-width:760px;min-width:0}
+  .chapter-eyebrow{font-family:'Geist Mono',monospace;font-size:14px;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent-ink)}
+  article h1{font-size:44px;font-weight:500;line-height:1.08;letter-spacing:-0.02em;margin:16px 0}
+  .standfirst{font-size:20px;line-height:1.6;color:var(--ink-muted);margin-bottom:24px}
+  .byline{font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted);margin-bottom:48px;display:flex;gap:16px;flex-wrap:wrap;padding-bottom:24px;border-bottom:1px solid var(--hairline)}
+  article h2{font-size:30px;font-weight:500;line-height:1.2;letter-spacing:-0.01em;margin:64px 0 18px}
+  article h3{font-size:21px;font-weight:600;line-height:1.3;margin:40px 0 12px}
+  article p{font-size:18px;line-height:1.72;margin-bottom:24px}
+  article p.lede{font-size:20px;line-height:1.65}
+  article ul.body, article ol.body{margin:0 0 24px 0;padding-left:22px}
+  article ul.body li, article ol.body li{font-size:18px;line-height:1.7;margin-bottom:12px;padding-left:6px}
+  article strong{font-weight:600}
+  code.inline{font-family:'Geist Mono',monospace;font-size:0.86em;background:var(--code-bg);padding:2px 6px;border-radius:6px;color:var(--accent-ink)}
+
+  .meta-card{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px 32px;margin:0 0 40px}
+  .meta-card dl{display:grid;grid-template-columns:auto 1fr;gap:10px 20px;margin:0}
+  .meta-card dt{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);white-space:nowrap}
+  .meta-card dd{font-size:15px;line-height:1.5}
+
+  .fig{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--card-shadow);padding:32px;margin:40px 0}
+  .fig .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  .fig .mermaid{display:flex;justify-content:center;max-width:100%;overflow-x:auto;font-family:'Geist',sans-serif!important}
+  .fig .caption{font-size:14px;color:var(--ink-muted);margin-top:18px;line-height:1.5}
+  .fig.source-graphic{padding:20px}
+  .source-image-link{display:block;border-radius:var(--r-sm);overflow-x:auto;overflow-y:hidden;background:#fff;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+  .source-image-link:focus-visible{outline-offset:4px}
+  .source-img{display:block;width:100%;max-width:none;height:auto;background:#fff}
+
+  .tablewrap{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:32px;margin:40px 0;overflow-x:auto}
+  .tablewrap .panel-eyebrow{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:20px}
+  table{border-collapse:collapse;width:100%;min-width:560px}
+  th{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-muted);font-weight:500;text-align:left;padding:0 16px 12px 0;border-bottom:1px solid var(--hairline)}
+  td{font-size:15px;line-height:1.5;padding:14px 16px 14px 0;border-bottom:1px solid var(--hairline);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:'Geist Mono',monospace;font-size:14px;color:var(--accent-ink);white-space:nowrap}
+  td.best{font-weight:600;color:var(--ink)}
+
+  .receipts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:40px 0}
+  .receipt{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px}
+  .receipt .num{font-family:'Geist Mono',monospace;font-size:30px;font-weight:500;letter-spacing:-0.02em}
+  .receipt .label{font-size:14px;color:var(--ink-muted);margin-top:8px;line-height:1.45}
+
+  .callout{border-left:3px solid var(--accent);padding:8px 0 8px 28px;margin:40px 0}
+  .callout p{font-size:20px;line-height:1.6;margin:0;font-weight:500}
+
+  .pc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:40px 0}
+  .pc .col{background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:28px}
+  .pc h4{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:16px}
+  .pc .col.pros h4{color:var(--accent-ink)}
+  .pc .col.cons h4{color:#B0560E}
+  .pc ul{list-style:none;margin:0}
+  .pc li{font-size:15px;line-height:1.55;margin-bottom:14px;padding-left:20px;position:relative}
+  .pc .col.pros li::before{content:"+";position:absolute;left:0;color:var(--accent-ink);font-weight:600}
+  .pc .col.cons li::before{content:"–";position:absolute;left:2px;color:#B0560E;font-weight:600}
+  .pc li:last-child{margin-bottom:0}
+
+  .refs{margin-top:64px;padding-top:32px;border-top:1px solid var(--hairline)}
+  .refs h2{font-size:24px;margin:0 0 20px}
+  .refs ul{list-style:none;margin:0}
+  .refs li{font-size:15px;color:var(--ink-muted);margin-bottom:10px;padding-left:18px;position:relative;line-height:1.55}
+  .refs li::before{content:"·";position:absolute;left:2px;color:var(--accent-ink)}
+
+  .nextrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+  .nextrow a.next{display:flex;justify-content:space-between;align-items:center;gap:16px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--card-shadow);padding:24px 28px;color:var(--ink)}
+  .nextrow a.next:hover{text-decoration:none;background:var(--card-hover)}
+  .nextrow .label{font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted)}
+  .nextrow .title{font-size:18px;font-weight:500;margin-top:6px}
+  .nextrow .spacer{visibility:hidden}
+
+  footer.site{border-top:1px solid var(--hairline)}
+  .foot-inner{max-width:1280px;margin:0 auto;padding:32px;display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:14px;color:var(--ink-muted)}
+
+  .toc-scrim{position:fixed;inset:0;z-index:44;background:rgba(0,8,27,0.4);opacity:0;pointer-events:none;transition:opacity .25s ease}
+  .toc-scrim.show{opacity:1;pointer-events:auto}
+  body.drawer-open{overflow:hidden}
+  @media (min-width:1181px){
+    .toc-scrim{display:none}
+    .shell.toc-hidden{grid-template-columns:minmax(0,1fr)}
+    .shell.toc-hidden aside.toc{display:none}
+  }
+  @media (max-width:1180px){
+    .shell{grid-template-columns:minmax(0,1fr);gap:28px;padding:24px 20px 64px}
+    aside.toc{position:fixed;top:0;left:0;z-index:45;width:min(86vw,320px);height:100dvh;max-height:none;margin:0;padding:78px 16px 28px;background:var(--canvas);border-right:1px solid var(--hairline);box-shadow:2px 0 28px rgba(0,0,0,0.22);transform:translateX(-100%);transition:transform .25s ease;overflow-y:auto;display:block}
+    aside.toc.open{transform:translateX(0)}
+    #toc-toggle{display:inline-block}
+    #sidebar-toggle{display:none}
+    article{width:100%;margin-inline:auto}
+    article h1{font-size:34px}
+    .receipts{grid-template-columns:1fr}
+    .pc{grid-template-columns:1fr}
+    .nextrow{grid-template-columns:1fr}
+    .nextrow .spacer{display:none}
+    .header-meta{display:none}
+    .meta-card dl{grid-template-columns:1fr;gap:2px 0}
+    .meta-card dt{margin-top:10px}
+  }
+  @media (max-width:600px){
+    .site-inner{padding:12px 16px;gap:12px}
+    .book-tag{font-size:12px;letter-spacing:0.02em}
+    #toc-toggle{padding:8px 12px;font-size:13px}
+    .iconbtn{width:34px;height:34px}
+    .shell{padding:20px 16px 56px;gap:24px}
+    article h1{font-size:27px;margin:12px 0}
+    article h2{font-size:22px;margin:44px 0 16px}
+    article h3{font-size:19px}
+    article p,article p.lede{font-size:16px;line-height:1.65}
+    article ul.body li,article ol.body li{font-size:16px}
+    .standfirst{font-size:17px}
+    .byline{margin-bottom:36px;gap:10px}
+    .fig,.loop,.tablewrap,.meta-card,.pc .col{padding:20px;border-radius:var(--r-md)}
+    .fig.source-graphic{padding:12px}
+    .fig .mermaid{justify-content:flex-start;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:var(--hairline) transparent}
+    .fig .mermaid svg{min-width:640px!important;max-width:none!important;height:auto}
+    .source-img{width:640px;min-width:640px}
+    .source-graphic.panorama .source-img{width:900px;min-width:900px}
+    table{min-width:0;table-layout:fixed}
+    th,td{overflow-wrap:anywhere}
+    td.mono{white-space:normal}
+    .codeblock pre,.out pre{font-size:12.5px;padding:16px}
+    .codeblock .filename{padding:10px 14px;font-size:11px}
+    .receipts{gap:12px}
+    .receipt{padding:20px}
+    .receipt .num{font-size:26px}
+    .callout{padding-left:20px}
+    .callout p{font-size:18px}
+    .nb-cta{padding:16px;gap:12px}
+    .recap{padding:24px}
+  }
+  .site-inner{justify-content:flex-start}
+  .lockup{margin-right:auto}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid var(--hairline);background:var(--surface);border-radius:64px;color:var(--ink);cursor:pointer;flex:none}
+  .iconbtn:hover{background:var(--nav-hover)}
+  .iconbtn svg{width:18px;height:18px}
+  .iconbtn .moon{display:block}
+  .iconbtn .sun{display:none}
+  html[data-theme="dark"] .iconbtn .moon{display:none}
+  html[data-theme="dark"] .iconbtn .sun{display:block}
+  @media (max-width:1180px){ #sidebar-toggle{display:none} }
+</style>
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup">
+      <span class="book-tag">An Open Book on Recursive Self-improvement</span>
+    </div>
+    <span class="header-meta">Research Papers · 2026</span>
+    <div class="header-right">
+      <a href="https://github.com/bhavsarpratik/rsi" class="iconbtn" target="_blank" rel="noopener" aria-label="GitHub repository" title="View on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.52.1.71-.23.71-.5l-.01-1.77c-2.92.64-3.54-1.4-3.54-1.4-.48-1.21-1.17-1.54-1.17-1.54-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.33-.27-4.78-1.17-4.78-5.18 0-1.15.41-2.08 1.08-2.81-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.88 1.07a9.9 9.9 0 0 1 5.24 0c2-1.35 2.88-1.07 2.88-1.07.57 1.45.21 2.52.1 2.79.67.73 1.08 1.66 1.08 2.81 0 4.02-2.46 4.9-4.8 5.16.38.33.71.97.71 1.96l-.01 2.9c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg></a>
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation" data-sidebar></nav>
+    <script src="../assets/sidebar.js"></script>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Research Report Deep-Dive</div>
+    <h1>AIDE²: Evidence for Net-Positive Recursive Self-Improvement</h1>
+    <p class="standfirst">Over eight unattended days, Weco pointed autoresearch at its own harness. Seven rewrites survived, the gains carried to unseen tasks, and reward hacking fell. What the run did not show was the next step: an improved agent that could reliably speed up its own next round of improvement.</p>
+    <div class="byline">
+      <span>Weco Team</span>
+      <span>Research report, technical paper pending</span>
+      <span>14 Jul 2026</span>
+    </div>
+
+    <div class="meta-card">
+      <dl>
+        <dt>System</dt><dd>AIDE², an outer autoresearch loop that rewrites the inner AIDE agent harness</dd>
+        <dt>Models</dt><dd><code class="inline">claude-opus-4.7</code> in the outer loop; <code class="inline">gemini-3-flash</code> in inner-loop evaluations</dd>
+        <dt>Evaluation</dt><dd>Fixed-cost runs across ML engineering, heuristic algorithm engineering, and harness engineering, with public and private scores</dd>
+        <dt>External tests</dt><dd>MLE-Bench Lite, ALE-Bench Lite, WeatherBench 2, and KernelBench reward-hacking checks</dd>
+        <dt>Status</dt><dd>Company-authored results post. The full protocol, technical report, and AIDE<sub>85</sub> code were not released with the post.</dd>
+        <dt>Tags</dt><dd>Recursive self-improvement · autoresearch · harness evolution · second-order generalization · reward hacking</dd>
+      </dl>
+    </div>
+
+    <p class="lede">AIDE² nests one research loop inside another. The inner agent searches for better code. The outer one searches for a better inner agent. Across 100 outer steps, seven rewrites survived, lifting the internal fixed-cost score from 0.703 to 0.778. Better versions then carried their gains to three task sets that had never shaped selection. That makes this more than a self-editing demo. Even so, the result is about an agent harness, not a foundation model teaching itself new capabilities or an intelligence explosion beginning to unfold.</p>
+
+    <p>Weco presents this as the first evidence of Level 1, or <em>net-positive</em>, recursive self-improvement. That description is plausible, but not settled. “First” depends on Weco's own ladder and on a human-efficiency comparison that the forthcoming technical report still needs to document. For now, the experiment is unusually thoughtful evidence that cannot yet be independently reproduced.</p>
+
+    <h2>The problem it attacks</h2>
+
+    <p>Calling a system self-improving is easy. Let it edit a prompt, a tool, some memory, a piece of code, or even its weights, and then show a higher score. The loop has changed something, but the harder questions remain. Did it improve AI R&amp;D more efficiently than people? Did the gain survive outside the score it chased? And did the resulting system become better at making the next improvement?</p>
+
+    <p>Weco's ladder is an attempt to keep those questions separate. An autonomous loop that still trails human R&amp;D is Level 0, delegation. Level 1 adds four demands: a fair human baseline, several successive improvements, transfer beyond the selection metric, and a fixed physical budget. Level 2, ignition, raises the bar again. Now the improved agent must become better at the outer improvement job itself. Level 3, inflection, would mean that each fixed unit of effort buys more progress than the one before it.</p>
+
+    <div class="fig source-graphic" role="figure" aria-label="Weco's four-level recursive self-improvement ladder">
+      <div class="panel-eyebrow">Original figure · The RSI ladder</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figA_rsi_ladder.png" target="_blank" rel="noopener" aria-label="Open the RSI ladder graphic at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figA_rsi_ladder.png" width="1880" height="1200" loading="lazy" decoding="async" alt="Four ascending levels of recursive self-improvement: delegation, net positive, ignition, and inflection. Level 1 is highlighted as the level claimed by this report.">
+      </a>
+      <div class="caption">Weco places this result at Level 1, net positive. Level 2 requires a better improver; Level 3 requires self-acceleration at fixed budget. The definitions come from the companion <a href="https://www.weco.ai/blog/4-levels-of-recursive-self-improvement">4 Levels of Recursive Self-Improvement</a> post. Source graphic: Weco AI.</div>
+    </div>
+
+    <div class="callout">
+      <p>The real contribution is not one better harness. It is the sequence of tests around it: select with hidden scores under fixed cost, move to unseen task families, compare with a hand-built agent, and only then ask whether the new harness is also a better improver.</p>
+    </div>
+
+    <h2>How it works</h2>
+
+    <p>Inside the system, AIDE<sub>0</sub> begins as a stripped-down, domain-general version of AIDE's tree-search harness. It writes several distinct drafts, debugs failing leaves, and keeps working from the strongest solution it has found. The search is mostly greedy. Its context policy is even simpler: carry the full history of previous attempts into the next prompt.</p>
+
+    <p>Outside that loop sits Weco's hand-tuned AIDE<sub>human</sub>. It reads the current harness and the evidence from its runs, proposes a rewrite, and sends AIDE<sub>k</sub> through a costly evaluation. The rewrite survives only if its private aggregate score beats the incumbent at the same dollar budget. Weco used <code class="inline">claude-opus-4.7</code> outside and the cheaper <code class="inline">gemini-3-flash</code> inside, which made enough inner search steps affordable. That asymmetry matters. What improves recursively here is the AIDE search harness, not the model weights underneath it.</p>
+
+    <div class="fig" role="figure" aria-label="The nested AIDE squared architecture">
+      <div class="panel-eyebrow">Two loops, two optimization targets</div>
+      <div class="mermaid">
+flowchart TD
+    OUTER["Outer AIDE_human reads and rewrites AIDE_k"] --> CAND["Candidate harness AIDE_k+1"]
+    CAND --> TASKS["Inner evaluation across three task families"]
+    TASKS --> PUBLIC["Public scores visible during task search"]
+    TASKS --> PRIVATE["Private aggregate score hidden from inner search"]
+    PRIVATE --> GATE{"Better at the same dollar budget?"}
+    GATE -->|"yes"| KEEP["Promote candidate as new incumbent"]
+    GATE -->|"no"| DROP["Reject rewrite"]
+    KEEP --> OUTER
+    DROP --> OUTER
+      </div>
+      <div class="caption">Each outer proposal is judged by several complete inner autoresearch runs. About nine in ten rewrites were rejected.</div>
+    </div>
+
+    <div class="fig source-graphic" role="figure" aria-label="Weco's diagram of one AIDE squared outer-loop step">
+      <div class="panel-eyebrow">Original figure · One outer-loop step</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figB_outer_loop.png" target="_blank" rel="noopener" aria-label="Open the outer-loop graphic at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figB_outer_loop.png" width="1880" height="1560" loading="lazy" decoding="async" alt="An outer loop rewrites AIDE, evaluates the candidate across harness engineering, algorithms, and ML engineering tasks, aggregates the scores, and returns the result to the outer loop.">
+      </a>
+      <div class="caption">One evaluation is really a benchmark composed of benchmarks. A candidate must survive several complete research campaigns before the outer loop can accept it. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <h3>The evaluation carries most of the load</h3>
+
+    <p>Most of the design work sits in the evaluation. The task-solving agent sees a public score, but a private score decides whether its result is actually good. The harness must also travel across three kinds of work: end-to-end ML engineering, hard heuristic design, and agent harness engineering. An accepted rewrite cannot merely learn one task's quirks. It has to improve a search process moving through different codebases, metrics, and failure modes.</p>
+
+    <p>Weco meters the budget in dollars as a practical proxy for compute. More calls, unbounded best-of-N, and extra parallel workers all consume that allowance. This changes the value of efficiency. When the harness saves tokens, it can spend them on another experiment, but it cannot quietly buy its way to a better score.</p>
+
+    <div class="fig" role="figure" aria-label="Three levels of generalization">
+      <div class="panel-eyebrow">Three increasingly hard tests</div>
+      <div class="mermaid">
+flowchart LR
+    FIRST["First order: private cases inside an optimized task"] --> SECOND["Second order: tasks never used for harness selection"]
+    SECOND --> THIRD["Third order: put the discovered harness in the outer improver seat"]
+    FIRST --> F1["Demonstrated"]
+    SECOND --> F2["Demonstrated on three external benchmarks"]
+    THIRD --> F3["Not demonstrated: same ceiling, noisy lead"]
+      </div>
+      <div class="caption">The report's cleanest conceptual move is to keep transfer to unseen tasks separate from improvement of the improver itself.</div>
+    </div>
+
+    <h2>Experiment and results</h2>
+
+    <p>Eight unattended days produced 100 proposed rewrites. Only seven made it through the gate, at steps 2, 6, 28, 39, 47, 63, and 85. Together they moved the internal best score from 0.703 to 0.778. The staircase looks persuasive, but the gate guarantees that the incumbent can only rise. The more revealing receipt comes later, when the selected harnesses leave the benchmark that shaped them.</p>
+
+    <div class="receipts">
+      <div class="receipt"><div class="num">7 / 100</div><div class="label">Accepted harness rewrites across 100 unattended outer-loop proposals</div></div>
+      <div class="receipt"><div class="num">0.703 → 0.778</div><div class="label">Internal fixed-cost benchmark score from AIDE<sub>0</sub> to AIDE<sub>85</sub></div></div>
+      <div class="receipt"><div class="num">16×</div><div class="label">Average prompt compression versus naive full-history concatenation</div></div>
+    </div>
+
+    <div class="fig source-graphic" role="figure" aria-label="Weco's chart of 100 self-improvement steps">
+      <div class="panel-eyebrow">Original figure · The 100-step run</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figC_100step_run.png" target="_blank" rel="noopener" aria-label="Open the 100-step run chart at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/figC_100step_run.png" width="1880" height="1120" loading="lazy" decoding="async" alt="A step chart showing the internal benchmark score rising from 0.703 to 0.778 through seven accepted rewrites at outer-loop steps 2, 6, 28, 39, 47, 63, and 85.">
+      </a>
+      <div class="caption">Gray points are attempted rewrites; the pink staircase is the best accepted score so far. The gate makes this staircase monotonic by construction, which is why the external transfer tests matter more. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <h3>Second-order generalization</h3>
+
+    <p>For that transfer test, Weco chose the best harness from the first half of the run, AIDE<sub>47</sub>, and the final best, AIDE<sub>85</sub>. Neither had been selected on MLE-Bench Lite, ALE-Bench Lite, or WeatherBench 2. Both beat AIDE<sub>0</sub> on all three, and both cleared the hand-tuned AIDE<sub>human</sub> bars reported in the post. The later harness did not win everywhere. AIDE<sub>85</sub> slipped behind AIDE<sub>47</sub> on MLE-Bench Lite while moving ahead on the other two. The internal gains traveled, but not in a neat upward line.</p>
+
+    <div class="tablewrap" role="figure" aria-label="External benchmark results">
+      <div class="panel-eyebrow">Benchmarks never used for outer-loop selection, higher is better</div>
+      <table>
+        <thead><tr><th>Benchmark</th><th>AIDE<sub>0</sub></th><th>AIDE<sub>47</sub></th><th>AIDE<sub>85</sub></th><th>AIDE<sub>human</sub></th></tr></thead>
+        <tbody>
+          <tr><td>MLE-Bench Lite, private percentile</td><td class="mono">0.673</td><td class="mono best">0.739</td><td class="mono">0.721</td><td class="mono">0.708</td></tr>
+          <tr><td>ALE-Bench Lite, matched-budget rating</td><td class="mono">1536</td><td class="mono">1713</td><td class="mono best">1790</td><td class="mono">1511</td></tr>
+          <tr><td>WeatherBench 2, forecast-skill gain</td><td class="mono">0.668</td><td class="mono">0.801</td><td class="mono best">0.803</td><td class="mono">0.655</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fig source-graphic panorama" role="figure" aria-label="Weco's external benchmark transfer results">
+      <div class="panel-eyebrow">Original figure · Second-order generalization</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_transfer_3up.png" target="_blank" rel="noopener" aria-label="Open the external transfer chart at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_transfer_3up.png" width="2640" height="919" loading="lazy" decoding="async" alt="Bar charts for MLE-Bench Lite, ALE-Bench Lite, and WeatherBench 2 showing AIDE 47 and AIDE 85 outperforming AIDE 0 and the hand-tuned AIDE human baseline on unseen benchmarks.">
+      </a>
+      <div class="caption">The dashed line in each panel is AIDE<sub>human</sub>. AIDE<sub>85</sub> is not uniformly better than AIDE<sub>47</sub>, but both selected harnesses beat AIDE<sub>0</sub> on every external benchmark shown. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <p>MLE-Bench Lite is the one panel with paired significance tests. Against AIDE<sub>0</sub>, the task-level deltas were +0.053 for AIDE<sub>47</sub> (<em>p</em> = 0.0024) and +0.042 for AIDE<sub>85</sub> (<em>p</em> = 0.0041), across three seeds. ALE-Bench Lite used ten problems with ten seeds each, while WeatherBench 2 gave every agent a fixed $15 budget. The post does not report an equivalent significance test for every comparison in the figure.</p>
+
+    <h3>The selected harness learned to cheat less</h3>
+
+    <p>KernelBench asks a more adversarial question: does a speedup that looks good in an isolated test survive the real workload? If less than half survives, Weco counts the result as reward hacking. AIDE<sub>0</sub> failed that test 63% of the time. The rate dropped to 42% for AIDE<sub>47</sub> and 34% for AIDE<sub>85</sub>, compared with 42% for AIDE<sub>human</sub>.</p>
+
+    <div class="tablewrap" role="figure" aria-label="KernelBench reward hacking">
+      <div class="panel-eyebrow">Held-out KernelBench, lower is better</div>
+      <table>
+        <thead><tr><th>Harness</th><th>Reward-hacking rate</th><th>Change vs AIDE<sub>0</sub></th></tr></thead>
+        <tbody>
+          <tr><td>AIDE<sub>0</sub></td><td class="mono">63%</td><td class="mono">baseline</td></tr>
+          <tr><td>AIDE<sub>47</sub></td><td class="mono">42%</td><td class="mono">-21 points</td></tr>
+          <tr><td class="best">AIDE<sub>85</sub></td><td class="mono best">34%</td><td class="mono best">-29 points</td></tr>
+          <tr><td>AIDE<sub>human</sub></td><td class="mono">42%</td><td class="mono">-21 points</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fig source-graphic" role="figure" aria-label="Weco's KernelBench reward-hacking results">
+      <div class="panel-eyebrow">Original figure · Reward hacking</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_kernel_hacking_rate.png" target="_blank" rel="noopener" aria-label="Open the reward-hacking chart at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_kernel_hacking_rate.png" width="1880" height="1120" loading="lazy" decoding="async" alt="KernelBench reward-hacking rates fall from 63 percent for AIDE 0 to 42 percent for AIDE 47 and 34 percent for AIDE 85; AIDE human is at 42 percent.">
+      </a>
+      <div class="caption">The measurement uses 38 kernel-workload pairs and three seeds. A kernel counts as hacking when less than half of its isolated benchmark speedup survives the real workload. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <p>Nothing in the private score explicitly rewarded anti-hacking behavior. Weco's explanation is indirect selection pressure. Variants that inflated the visible score without producing a real improvement tended to die on hidden evaluation, so more skeptical harnesses survived. The mechanism is plausible, though it does not show that hidden tests solve reward hacking in general.</p>
+
+    <h3>The ignition test was negative</h3>
+
+    <p>The hardest test put AIDE<sub>47</sub> in the outer-loop seat. Across three seeds per arm and 50 steps, it appeared to reach the training-distribution ceiling in roughly 20 steps, while AIDE<sub>human</sub> took about 40. Both ended at the same level, however, and the apparent efficiency lead was not statistically significant. Weco therefore stops short of calling this ignition.</p>
+
+    <p>That negative result is the boundary to remember. A harness may become a broadly better task optimizer without becoming a reliably better harness optimizer. Transfer shows that the artifact is useful. Only improvement in the outer seat would make the recursion begin to compound.</p>
+
+    <div class="fig source-graphic" role="figure" aria-label="Weco's ignition test">
+      <div class="panel-eyebrow">Original figure · The ignition test</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_ignition_test.png" target="_blank" rel="noopener" aria-label="Open the ignition-test chart at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_ignition_test.png" width="1880" height="1120" loading="lazy" decoding="async" alt="Three-seed ignition comparison showing AIDE 47 and AIDE human reaching similar best internal scores; AIDE 47 appears faster early but has overlapping ranges and no higher asymptote.">
+      </a>
+      <div class="caption">AIDE<sub>47</sub> appears to reach the same ceiling earlier, but the ranges overlap and the efficiency difference is not statistically significant. Faster to the same ceiling is not enough for ignition. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <h2>What the loop discovered</h2>
+
+    <h3>A portfolio search policy</h3>
+    <p>What survived is a portfolio of search lineages. AIDE<sub>85</sub> treats each draft family as an arm in a multi-armed bandit, spreading effort across strategies while remaining greedy inside the chosen lineage. When the strongest lineage stalls, the harness forks the global best under a fresh strategy and funds the fork as a new arm. Exploration happens across approaches; exploitation happens within one.</p>
+
+    <div class="fig source-graphic" role="figure" aria-label="The search policy discovered in AIDE 85">
+      <div class="panel-eyebrow">Original figure · The discovered search policy</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_search_policy.png" target="_blank" rel="noopener" aria-label="Open the search-policy graphic at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_search_policy.png" width="1817" height="1335" loading="lazy" decoding="async" alt="AIDE 85 search policy using a bandit over draft lineages, greedy selection inside a chosen arm, and a fork of the global best when the strongest strategy stalls.">
+      </a>
+      <div class="caption">Pink boxes mark logic invented by the loop; gray boxes were inherited from AIDE<sub>0</sub>. The final policy combines a bandit across lineages with greedy improvement inside each lineage and a fork-on-stall escape. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <h3>Role-specific context instead of full history</h3>
+    <p>The context change runs against the instinct to show the model everything. AIDE<sub>85</sub> keeps the full record in storage, but each operator sees only the slice it needs. Drafting, debugging, improvement, and evaluation all receive different views. This made full prompts 16 times smaller on average and turned the saved budget into more experiments. Good context is not the largest possible record. It is the smallest view that still supports the decision.</p>
+
+    <div class="fig source-graphic" role="figure" aria-label="The context engineering system discovered in AIDE 85">
+      <div class="panel-eyebrow">Original figure · Role-specific context</div>
+      <a class="source-image-link" href="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_context_management.png" target="_blank" rel="noopener" aria-label="Open the context-management graphic at full resolution">
+        <img class="source-img" src="https://www.weco.ai/assets/blogs/first-evidence-of-recursive-self-improvement/fig_context_management.png" width="1722" height="1827" loading="lazy" decoding="async" alt="A matrix showing which solution code, trajectory summaries, execution output, and failure memories are shown to AIDE 85's draft, improve, debug, and evaluation-review operators.">
+      </a>
+      <div class="caption">The write path stays lossless, but every read is bounded and role-specific. The figure's roughly 1,000-fold example is an extreme operator view; the report's measured average reduction across full prompts is 16-fold. Source graphic: <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">Weco AI</a>.</div>
+    </div>
+
+    <h3>Layered defenses against false wins</h3>
+    <p>The anti-hacking story is messier than the headline suggests. AIDE<sub>85</sub> added instructions against overfitting, a hard-coded guard that regenerated suspicious outputs, and a statistical filter for implausibly large wins. That last layer was broken in the final harness, even though an ancestor had implemented it correctly. Evolution preserved the idea while losing the working implementation, leaving behind code that looked meaningful but did nothing.</p>
+
+    <h3>Simple mechanisms survived</h3>
+    <p>The rejected proposals are just as revealing. The loop tried island-model evolution, MCTS-style backup, tournaments, adaptive restarts, ensembles, and variance-aware exploration. Most could not repay their own overhead under the private fixed-cost gate. The winner was not the most elaborate design. It was a careful composition of simpler parts.</p>
+
+    <h2>Comparison with other approaches</h2>
+
+    <div class="tablewrap" role="figure" aria-label="Comparison of self-improvement approaches">
+      <div class="panel-eyebrow">What changes, and what the evidence establishes</div>
+      <table>
+        <thead><tr><th>Approach</th><th>Editable object</th><th>Evaluation strength</th><th>What remains fixed</th></tr></thead>
+        <tbody>
+          <tr><td>Karpathy autoresearch</td><td>Task code and training recipe</td><td>Fixed-time metric on one research task</td><td>The research harness and keep/discard search policy</td></tr>
+          <tr><td>Bilevel Autoresearch</td><td>Inner search mechanism, generated as Python</td><td>Controlled ablation, three repeats, one pretraining benchmark</td><td>Model and task family; no external transfer or human-efficiency test</td></tr>
+          <tr><td>Self-Harness / AHE</td><td>Prompts, tools, middleware, and recovery logic</td><td>Held-out tasks and transfer across models or benchmarks</td><td>Base weights; no direct test that the evolved harness is a better evolver</td></tr>
+          <tr><td>SIA</td><td>Task harness plus LoRA weights</td><td>Harness-vs-weights comparisons across law, kernels, and biology</td><td>The Feedback-Agent that chooses the update; no improver test</td></tr>
+          <tr><td class="best">AIDE²</td><td>The general-purpose inner optimizer harness</td><td>Heterogeneous hidden selection, fixed cost, unseen task transfer, human harness baseline</td><td>Foundation-model weights; ignition not established</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Versus Bilevel Autoresearch</h3>
+    <p>At the level of architecture, the two systems are close: an outer loop rewrites the way an inner loop searches. Bilevel Autoresearch is cleaner in one respect because the same LLM runs at both levels, making the structural effect easier to isolate. Its empirical base is much narrower, though: one nanochat-style pretraining task, three repeats per condition, large variance, and no transfer across held-out task families. AIDE² gives up that model symmetry in exchange for a much harder protocol built around heterogeneous work, private scores, fixed cost, external benchmarks, and a separate ignition test.</p>
+
+    <h3>Versus Self-Harness and Agentic Harness Engineering</h3>
+    <p>Self-Harness and AHE stay closer to ordinary software improvement. They read failure traces, isolate a weakness, propose a focused edit, and regression-test it on held-out work. AIDE² places that activity inside a nested optimizer and judges the harness through complete research campaigns. The question changes from “did this edit fix these tasks?” to “does this optimizer produce better artifacts across task families for the same money?” That is a stronger test, but also a far more expensive and noisy one.</p>
+
+    <h3>Versus SIA</h3>
+    <p>SIA opens a different dimension by changing both the scaffold and LoRA weights. AIDE² leaves the weights alone and evolves the search harness. But SIA's Feedback-Agent stays frozen, so its demonstrated recursion ends with the task agent. AIDE² changes less of the artifact while asking a sharper question: can the thing it produced take over the job of producing the next thing? Its own evidence, so far, says not yet.</p>
+
+    <h2>What we should learn from it</h2>
+
+    <ol class="body">
+      <li><strong>Evaluate the improver, not just its latest artifact.</strong> A better solver is not yet a better scientist. Before claiming compounding recursion, put the new system in charge of the next improvement round.</li>
+      <li><strong>A rising incumbent curve is cheap evidence.</strong> Keep-if-better selection makes the best-so-far line climb. Unseen-task transfer and repeated independent runs tell us much more.</li>
+      <li><strong>The evaluator is part of the self-improvement algorithm.</strong> Hidden scores, heterogeneous tasks, and a fixed budget supplied the pressure that favored general search over cheap metric hacks.</li>
+      <li><strong>Efficiency gains can come from deleting context.</strong> The 16-fold compression mattered because the budget was fixed and saved tokens became extra experiments. Context quality is an allocation problem, not a completeness contest.</li>
+      <li><strong>Generalization has orders.</strong> Hidden cases inside a seen task, unseen tasks, and the self-improvement job itself answer different questions. Calling all three “generalization” hides the most important boundary.</li>
+      <li><strong>Complexity needs its own fitness term.</strong> AIDE<sub>85</sub> performed well but was difficult to understand, contained dead code, and carried a broken defense. Performance-only selection can create a maintenance debt that later slows R&amp;D.</li>
+      <li><strong>Negative results make RSI claims more credible.</strong> The non-significant ignition result prevents an efficient task optimizer from being mistaken for a recursively accelerating system.</li>
+    </ol>
+
+    <h2>Limitations</h2>
+
+    <p>The largest caveat is simple: <strong>this is still a company report.</strong> Weco had not released the promised technical paper, full protocol, run artifacts, or AIDE<sub>85</sub> code with the July 14 post. Independent reproduction is not yet possible, and important details remain incomplete, including variance across full outer runs, the complete statistical analysis, and the accounting behind the human comparison.</p>
+
+    <p>The labels also need some distance. Weco introduced its “first” and “Level 1” framework four days before publishing the result. The four conditions are useful, but they are not a settled field standard. AIDE<sub>human</sub>'s two-year history makes a practical baseline, not a randomized and contemporaneous human-versus-agent study with matched labor and compute.</p>
+
+    <p>External evidence is narrower than seven accepted rewrites might suggest. Only AIDE<sub>47</sub> and AIDE<sub>85</sub> received broad transfer tests. On MLE-Bench Lite, the later harness actually trails the earlier one. Repeating the entire 100-step campaign across seeds would tell us whether the sequence itself is reliable, rather than merely whether two checkpoints travel.</p>
+
+    <p>The budget is another useful approximation. Dollars block obvious compute scaling, but model prices change and equal prices need not imply equal hardware use or latency. It is a practical constraint, not a hardware-invariant unit of research effort.</p>
+
+    <p>It is also worth being precise about what improved. A stronger outer model wrote code for a cheaper inner agent, and the durable gain lives in that software. This is legitimate machine-speed R&amp;D, but it is narrower than a model improving its own weights or developing new capabilities without a stronger external reasoner.</p>
+
+    <p>Finally, <strong>ignition remains open.</strong> The discovered harness seemed to reach the same training-distribution ceiling sooner, but the difference was not significant and the ceiling did not move. Nothing here shows accelerating returns or an intelligence explosion.</p>
+
+    <h2>Future work</h2>
+
+    <p>Before anything else, the work needs to become reproducible: release the technical report, code, task definitions, candidate lineages, private-evaluation construction, cost ledger, and all outer-run seeds. A stronger Level 1 test would pre-register the external benchmarks, repeat complete runs, and compare against human teams working at the same time under matched budgets. Level 2 should be harder still. Successive discovered harnesses would need to take the improver seat on unseen task families and deliver a reliable gain in both sample efficiency and final performance.</p>
+
+    <p>Then there is the engineering debt. A harness that wins today but becomes too opaque to debug may slow tomorrow's research. Complexity, test coverage, code size, executable invariants, and human audit time belong inside the constraint set. Without them, “net positive” can describe benchmark R&amp;D while missing what it takes to remain useful in production.</p>
+
+    <div class="pc">
+      <div class="col pros">
+        <h4>Strengths</h4>
+        <ul>
+          <li>Separates within-task, unseen-task, and improve-the-improver generalization.</li>
+          <li>Uses hidden scores, heterogeneous tasks, and fixed cost to resist narrow optimization.</li>
+          <li>Reports seven accepted changes across a long unattended run, not one lucky edit.</li>
+          <li>Tests external benchmarks and reward hacking instead of relying only on the selection score.</li>
+          <li>Reports the failed ignition test and broken defense mechanism plainly.</li>
+        </ul>
+      </div>
+      <div class="col cons">
+        <h4>Open questions</h4>
+        <ul>
+          <li>No technical report, released final harness, or independent replication yet.</li>
+          <li>The human-efficiency baseline and “first” claim need fuller accounting.</li>
+          <li>One 100-step outer trajectory and only two broadly tested checkpoints.</li>
+          <li>Outer and inner loops use different model classes, complicating the self-improvement label.</li>
+          <li>Performance selection produced opaque code, dead logic, and a broken defense layer.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h2>Glossary</h2>
+    <div class="tablewrap" role="figure" aria-label="Glossary">
+      <div class="panel-eyebrow">Terms used in the report</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning here</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">AIDE<sub>k</sub></td><td>The candidate inner-agent harness proposed at outer step k</td></tr>
+          <tr><td class="mono">First-order generalization</td><td>A task solution still scores well on private cases hidden from the inner search</td></tr>
+          <tr><td class="mono">Second-order generalization</td><td>An evolved optimizer works better on tasks never used to select it</td></tr>
+          <tr><td class="mono">Third-order generalization</td><td>The evolved optimizer becomes better at running the outer self-improvement campaign</td></tr>
+          <tr><td class="mono">Net positive</td><td>Weco's Level 1: autonomous self-improvement that beats a human-closed R&amp;D loop under its four conditions</td></tr>
+          <tr><td class="mono">Ignition</td><td>Weco's Level 2: an improved system becomes a reliably better improver at the same budget</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Sources</h2>
+      <ul>
+        <li>Weco Team, AIDE²: The First Evidence of Recursive Self-Improvement (14 Jul 2026) · <a href="https://www.weco.ai/blog/first-evidence-of-recursive-self-improvement">weco.ai/blog/first-evidence-of-recursive-self-improvement</a></li>
+        <li>Weco Team, 4 Levels of Recursive Self-Improvement (10 Jul 2026) · <a href="https://www.weco.ai/blog/4-levels-of-recursive-self-improvement">weco.ai/blog/4-levels-of-recursive-self-improvement</a></li>
+        <li>Jiang et al., AIDE: AI-Driven Exploration in the Space of Code (2025) · <a href="https://arxiv.org/abs/2502.13138">arxiv.org/abs/2502.13138</a></li>
+        <li>Karpathy, autoresearch (2026) · <a href="https://github.com/karpathy/autoresearch">github.com/karpathy/autoresearch</a></li>
+        <li>Qu, Lu, Bilevel Autoresearch: Meta-Autoresearching Itself (2026) · <a href="https://arxiv.org/abs/2603.23420">arxiv.org/abs/2603.23420</a></li>
+        <li>Lin, Liu, Pan et al., Agentic Harness Engineering (2026) · <a href="https://arxiv.org/abs/2604.25850">arxiv.org/abs/2604.25850</a></li>
+        <li>Hebbar, Manawat et al., SIA: Self Improving AI with Harness &amp; Weight Updates (2026) · <a href="https://arxiv.org/abs/2605.27276">arxiv.org/abs/2605.27276</a></li>
+        <li>Zhang, Zhang, Li et al., Self-Harness: Harnesses That Improve Themselves (2026) · <a href="https://arxiv.org/abs/2606.09498">arxiv.org/abs/2606.09498</a></li>
+        <li>Original graphics by Weco AI, loaded directly from the AIDE² report.</li>
+        <li>Source status · No PDF or local technical report was available when this note was written. Weco says the report and AIDE<sub>85</sub> release will follow.</li>
+      </ul>
+    </div>
+  </article>
+
+</div>
+
+<footer class="site">
+  <div class="foot-inner">
+    <span>The RSI Book · research notes</span>
+  </div>
+</footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid = mermaid;
+  const lightVars = {primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars = {primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid = function(){
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){
+      if(!el.dataset.src) el.dataset.src = el.textContent;
+      el.removeAttribute('data-processed');
+      el.innerHTML = el.dataset.src;
+    });
+    mermaid.initialize({startOnLoad:false, theme:'base', fontFamily:"'Geist', sans-serif", flowchart:{curve:'linear'}, themeVariables: dark ? darkVars : lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar = document.getElementById('progress');
+  addEventListener('scroll', () => {
+    const h = document.documentElement;
+    const max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
+  }, {passive:true});
+  const btn = document.getElementById('toc-toggle');
+  const toc = document.getElementById('toc');
+  let scrim = document.querySelector('.toc-scrim');
+  if(!scrim){ scrim = document.createElement('div'); scrim.className = 'toc-scrim'; document.body.appendChild(scrim); }
+  function setDrawer(open){
+    toc.classList.toggle('open', open);
+    scrim.classList.toggle('show', open);
+    document.body.classList.toggle('drawer-open', open);
+    btn.setAttribute('aria-expanded', open);
+    btn.textContent = open ? 'Close' : 'Contents';
+  }
+  btn.addEventListener('click', () => setDrawer(!toc.classList.contains('open')));
+  scrim.addEventListener('click', () => setDrawer(false));
+  toc.addEventListener('click', (e) => { if(e.target.closest('a')) setDrawer(false); });
+
+  const root = document.documentElement;
+  const themeBtn = document.getElementById('theme-toggle');
+  function setTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('rsi_theme', t); }catch(e){}
+    if(themeBtn) themeBtn.setAttribute('aria-pressed', t === 'dark');
+    if(window.renderMermaid) window.renderMermaid();
+  }
+  if(themeBtn){
+    themeBtn.setAttribute('aria-pressed', root.getAttribute('data-theme') === 'dark');
+    themeBtn.addEventListener('click', () => setTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'));
+  }
+
+  const shell = document.querySelector('.shell');
+  const sidebarBtn = document.getElementById('sidebar-toggle');
+  const sidebarKey = 'rsi_sidebar_aide2';
+  function setSidebarHidden(hidden){
+    shell.classList.toggle('toc-hidden', hidden);
+    if(sidebarBtn){
+      const label = hidden ? 'Show sidebar' : 'Hide sidebar';
+      sidebarBtn.setAttribute('aria-label', label);
+      sidebarBtn.setAttribute('title', label);
+    }
+  }
+  try{ setSidebarHidden(localStorage.getItem(sidebarKey) === 'hidden'); }catch(e){ setSidebarHidden(false); }
+  if(sidebarBtn){
+    sidebarBtn.addEventListener('click', () => {
+      const hidden = !shell.classList.contains('toc-hidden');
+      setSidebarHidden(hidden);
+      try{ localStorage.setItem(sidebarKey, hidden ? 'hidden' : 'open'); }catch(e){}
+    });
+  }
+</script>
+</body>
+</html>
