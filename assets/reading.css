@@ -1,0 +1,18 @@
+/*
+ * Shared reading controls for every page.
+ * Change the variables here to update the book's reading width or typeface.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&display=swap");
+
+:root {
+  --reading-column-width: 38rem; /* 608px: 20% narrower than 760px. */
+  --reading-font: "Literata", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+}
+
+article {
+  width: 100%;
+  max-width: var(--reading-column-width);
+  justify-self: center;
+  font-family: var(--reading-font);
+  font-optical-sizing: auto;
+}

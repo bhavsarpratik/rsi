@@ -16,7 +16,7 @@
       items: [
         { number: '01', label: 'The State of Recursive Self-Improvement', path: 'index.html' },
         { number: '02', label: 'Build your first agent improvement loop', path: 'chapters/ch02.html' },
-        { number: '03', label: 'Coming soon', soon: true },
+        { number: '03', label: 'Anatomy of a Recursive Self-Improvement System', path: 'chapters/ch03.html' },
       ],
     },
     {
@@ -103,6 +103,142 @@
   });
 
   mount.replaceChildren(fragment);
+
+  function onReady(callback) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', callback, { once: true });
+    } else {
+      callback();
+    }
+  }
+
+  function headingId(heading, index) {
+    if (heading.id) return heading.id;
+
+    const base = heading.textContent
+      .trim()
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || `section-${index + 1}`;
+
+    let id = base;
+    let suffix = 2;
+    while (document.getElementById(id)) {
+      id = `${base}-${suffix}`;
+      suffix += 1;
+    }
+
+    heading.id = id;
+    return id;
+  }
+
+  function setupPageNavigation() {
+    const article = document.querySelector('article');
+    if (!article) return;
+
+    const headings = Array.from(article.querySelectorAll('h2'));
+    if (!headings.length) return;
+
+    const nav = document.createElement('nav');
+    nav.className = 'page-nav';
+    nav.setAttribute('aria-label', 'On this page');
+
+    const header = document.createElement('div');
+    header.className = 'page-nav__header';
+
+    const title = document.createElement('span');
+    title.textContent = 'On this page';
+
+    const progress = document.createElement('span');
+    progress.className = 'page-nav__progress';
+    progress.textContent = '0%';
+    progress.setAttribute('aria-label', 'Reading progress');
+
+    header.append(title, progress);
+
+    const list = document.createElement('ol');
+    const links = headings.map(function (heading, index) {
+      const item = document.createElement('li');
+      const link = document.createElement('a');
+      const id = headingId(heading, index);
+      link.href = `#${id}`;
+      link.textContent = heading.textContent.trim();
+      link.title = heading.textContent.trim();
+      item.append(link);
+      list.append(item);
+      return link;
+    });
+
+    nav.append(header, list);
+    document.body.append(nav);
+
+    let scheduled = false;
+    function update() {
+      scheduled = false;
+      const topbar = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--topbar-height')) || 71;
+      const marker = topbar + Math.min(window.innerHeight * 0.24, 180);
+      let activeIndex = 0;
+
+      headings.forEach(function (heading, index) {
+        if (heading.getBoundingClientRect().top <= marker) activeIndex = index;
+      });
+
+      links.forEach(function (link, index) {
+        const active = index === activeIndex;
+        link.classList.toggle('active', active);
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+
+      const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+      const percent = scrollable > 0 ? Math.min(100, Math.max(0, Math.round((window.scrollY / scrollable) * 100))) : 100;
+      progress.textContent = `${percent}%`;
+    }
+
+    function scheduleUpdate() {
+      if (scheduled) return;
+      scheduled = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate);
+    links.forEach(function (link) {
+      link.addEventListener('click', scheduleUpdate);
+    });
+    update();
+  }
+
+  function setupSidebarControlLabels() {
+    const shell = document.querySelector('.shell');
+    const toc = document.getElementById('toc');
+    const desktopButton = document.getElementById('sidebar-toggle');
+    if (!shell || !toc || !desktopButton) return;
+
+    function update() {
+      const expanded = window.matchMedia('(max-width: 980px)').matches
+        ? toc.classList.contains('open')
+        : !shell.classList.contains('toc-hidden');
+      const action = expanded ? 'Hide contents' : 'Show contents';
+      desktopButton.setAttribute('aria-controls', 'toc');
+      desktopButton.setAttribute('aria-expanded', String(expanded));
+      desktopButton.setAttribute('aria-label', action);
+      desktopButton.title = action;
+    }
+
+    const observer = new MutationObserver(update);
+    observer.observe(shell, { attributes: true, attributeFilter: ['class'] });
+    observer.observe(toc, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', update);
+    update();
+  }
+
+  onReady(function () {
+    setupPageNavigation();
+    setupSidebarControlLabels();
+  });
 
   function closeMobileDrawer() {
     const toc = document.getElementById('toc');

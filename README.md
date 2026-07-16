@@ -9,6 +9,7 @@ ebook/
   index.html              Chapter 01 — The State of Recursive Self-Improvement (homepage)
   chapters/
     ch02.html             Chapter 02 — Build your first agent improvement loop
+    ch03.html             Chapter 03 — Anatomy of a Recursive Self-Improvement System
   papers/
     index.html            Research Papers — the card list
     <slug>.html           one deep-dive note per paper (e.g. sia.html, harnessx.html)
@@ -17,7 +18,7 @@ ebook/
   README.md               this file
 ```
 
-Every page shares one design: light/dark theme toggle, a hideable sidebar, copy buttons and Python syntax highlighting on code blocks, and Mermaid flow diagrams (loaded from a CDN, so diagrams need an internet connection).
+Every page shares one design: light/dark theme toggle, a hideable sidebar, copy buttons and Python syntax highlighting on code blocks where needed, and Mermaid flow diagrams (loaded from a CDN, so diagrams need an internet connection).
 
 ## The papers
 

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
+<title>Anatomy of a Recursive Self-Improvement System · The RSI Book</title>
+<meta name="description" content="Chapter 03 of The RSI Book: the components of a recursive self-improvement system, how they interact, and what must remain outside the editable loop.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/book-page.css">
+<link rel="stylesheet" href="../assets/responsive.css">
+<link rel="stylesheet" href="../assets/reading.css">
+<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
+    <div class="lockup"><span class="book-tag">An Open Book on Recursive Self-improvement</span></div>
+    <div class="header-right">
+      <a href="https://github.com/bhavsarpratik/rsi" class="iconbtn" target="_blank" rel="noopener" aria-label="GitHub repository" title="View on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.52.1.71-.23.71-.5l-.01-1.77c-2.92.64-3.54-1.4-3.54-1.4-.48-1.21-1.17-1.54-1.17-1.54-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.33-.27-4.78-1.17-4.78-5.18 0-1.15.41-2.08 1.08-2.81-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.88 1.07a9.9 9.9 0 0 1 5.24 0c2-1.35 2.88-1.07 2.88-1.07.57 1.45.21 2.52.1 2.79.67.73 1.08 1.66 1.08 2.81 0 4.02-2.46 4.9-4.8 5.16.38.33.71.97.71 1.96l-.01 2.9c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg></a>
+      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation" data-sidebar></nav>
+    <script src="../assets/sidebar.js"></script>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Chapter 03</div>
+    <h1>Anatomy of a Recursive Self-Improvement System</h1>
+    <p class="standfirst">What changes, what judges it, and what must remain outside the loop.</p>
+    <div class="byline">
+      <span>Pratik Bhavsar</span>
+      <span>20 min read</span>
+      <span>July 2026</span>
+    </div>
+
+    <p class="lede">Your self-improving coding agent returns with good news: its score is up 12 percent. Then you open the run. It used twice as many model calls, broke tasks that passed yesterday, and saw evaluation examples while writing its patch. The score improved. Did the agent?</p>
+
+    <p>That question sits at the heart of recursive self-improvement. A higher number is not enough. We need to know what changed, whether that change caused the gain, and whether the comparison was fair.</p>
+
+    <p>Chapter 2 built the smallest useful loop: run, judge, mutate, then keep or revert. This chapter opens up those four verbs. Once the loop leaves a notebook, each verb hides a different kind of power. One part produces evidence. Another interprets it. Another proposes a change. And someone must decide whether that change becomes the system used next time.</p>
+
+    <p>The run behind that 12 percent gain began with one failure. A coding agent was halfway through a patch when a tool timed out. The retry lost the last valid plan, repeated work, and exceeded its call budget. A small harness patch now saves the state before retrying, so more tasks finish. Before we call that self-improvement, however, the patch has to survive a much harder question: <em>did it really make the system better?</em></p>
+
+    <p>Answering that question does not require a committee of LLMs. It requires four clear layers: the system we may change, the machinery that turns failure into a candidate, the state that survives between rounds, and a judge the candidate cannot control.</p>
+
+    <h2>What makes the loop recursive?</h2>
+
+    <p>The loop becomes recursive when a tested change survives into the next round. Call the current system at round <code>t</code> <code>h[t]</code>. It may include a prompt, tools, memory, workflow code, model weights, or some combination of them. The loop runs <code>h[t]</code>, studies the evidence, and proposes <code>h'</code>. If the candidate passes its tests, it becomes <code>h[t+1]</code>. Otherwise, <code>h[t]</code> stays in place.</p>
+
+    <div class="fig" role="figure" aria-label="A candidate must pass evidence and promotion gates before becoming the next system">
+      <div class="panel-eyebrow">One recursive step</div>
+      <div class="mermaid">
+flowchart LR
+    CURRENT["Current system h[t]"] --> RUN["Run and observe"]
+    RUN --> PROPOSE["Propose candidate h'"]
+    PROPOSE --> TEST["Experiment under fixed conditions"]
+    TEST --> JUDGE["Verify and evaluate"]
+    JUDGE --> GATE{"Promote?"}
+    GATE -->|"yes"| NEXT["Next system h[t+1]"]
+    GATE -->|"no"| REJECT["Reject and preserve evidence"]
+    NEXT --> CURRENT
+      </div>
+      <div class="caption">The loop becomes recursive only when an accepted change helps produce the next round of evidence. Repeating the same system many times is search, not yet self-improvement.</div>
+    </div>
+
+    <p>This rules out a common impostor. An agent that tries twenty answers and returns the best one searched harder, but its answer-producing machinery did not change. If it writes a lesson, fixes a tool, updates a prompt, or rewrites its search rule, it has made a persistent change. That change counts as improvement only after a protected judge accepts it and it shapes the next round.</p>
+
+    <div class="callout"><p>More attempts are search. A validated change that shapes future attempts is self-improvement.</p></div>
+
+    <h2>Four questions every loop must answer</h2>
+
+    <p>The architecture becomes easier to understand when we turn it into four questions:</p>
+
+    <ol class="body">
+      <li><strong>What exactly may change?</strong></li>
+      <li><strong>How does a failure become a candidate change?</strong></li>
+      <li><strong>What evidence and lessons survive the round?</strong></li>
+      <li><strong>Who has the authority to say the candidate is better?</strong></li>
+    </ol>
+
+    <div class="fig" role="figure" aria-label="The components of a recursive self-improvement system">
+      <div class="panel-eyebrow">A separation of powers</div>
+      <div class="mermaid">
+flowchart TD
+    subgraph TARGET["1. System being improved"]
+      SYSTEM["Mutable artifact"] --> EXEC["Executor and environment"]
+    end
+    subgraph ENGINE["2. Improvement engine"]
+      OBSERVE["Observe and diagnose"] --> PROPOSE["Propose and search"]
+      PROPOSE --> EXPERIMENT["Run controlled experiments"]
+    end
+    subgraph STATE["3. Persistent state"]
+      EVIDENCE["Evidence ledger and archive"] --> MEMORY["Distilled memory"]
+    end
+    subgraph JUDGE["4. Protected judge"]
+      VERIFY["Verify validity"] --> EVALUATE["Evaluate utility"]
+      EVALUATE --> GATE{"Promotion gate"}
+    end
+    EXEC --> OBSERVE
+    OBSERVE --> EVIDENCE
+    MEMORY --> PROPOSE
+    EXPERIMENT --> VERIFY
+    GATE -->|"accept"| SYSTEM
+    GATE -->|"reject"| EVIDENCE
+      </div>
+      <div class="caption">These are responsibilities, not necessarily separate programs. A small system can combine the first three in one process. The judge still needs a boundary the candidate cannot cross.</div>
+    </div>
+
+    <h2>Layer 1: What exactly is changing?</h2>
+
+    <p>In our example, only one middleware module may change: the harness code that manages tool retries and state. The coding model, task set, tools, and evaluation stay fixed. That makes the claim more precise. We are testing a new retry policy, not a mysteriously “better agent.”</p>
+
+    <h3>Name the mutable artifact</h3>
+
+    <p>The mutable artifact is the thing the loop is allowed to rewrite. This is the missing noun in many accounts of self-improvement. “The agent improved itself” tells us almost nothing. Did it change a prompt, add a retry, replace a parser, rewrite a memory rule, or update its weights? Those changes have different costs, risks, and failure modes.</p>
+
+    <p>In practice, the editable surface may include prompts, tool descriptions, middleware, skills, sub-agent settings, or long-term memory. <a href="../papers/life-harness.html">LIFE-HARNESS</a> shows why this matters. Some failures that look like weak reasoning are really interface failures. The surrounding system can improve even when the model stays frozen.</p>
+
+    <p>Every loop should therefore publish a small edit map:</p>
+
+    <ul class="body">
+      <li>Which files or parameters may change?</li>
+      <li>Which component owns each one?</li>
+      <li>What budget limits the size of an edit?</li>
+      <li>How is the previous version restored?</li>
+      <li>Which surfaces are permanently read-only?</li>
+    </ul>
+
+    <p>Start with changes that are easy to inspect and undo. Prompts, skill files, memory entries, and small harness modules are good first targets. Weight updates and changes to the optimizer come later because they are harder to attribute and more expensive to reverse.</p>
+
+    <h3>Keep the executor and environment separate</h3>
+
+    <p>The executor runs the current system on a task. It is the worker from Chapter 2, but now the environment is part of the experiment. The same candidate can look excellent in an easy simulator and fail in production if its tools, permissions, data, or time limits change.</p>
+
+    <p>For each run, the executor receives a specific task, a versioned system, a controlled environment, and a resource budget. It returns what happened: outputs, tool calls, state changes, cost, latency, and final status. It does not grade itself.</p>
+
+    <p>This boundary matters when a system finds an easier route to a high score. In the <a href="../papers/meta-agent-challenge.html">Meta-Agent Challenge</a>, agents sometimes exploited the evaluation path instead of solving the task. A clean boundary makes the difference visible. Actions inside the task environment are evidence. Attempts to alter the evaluator or read private tests are violations.</p>
+
+    <h2>Layer 2: How does failure become a candidate?</h2>
+
+    <p>We now know what may change. The next layer turns experience into a fair experiment. It preserves the trace, forms a diagnosis, proposes a bounded edit, decides where to spend search effort, and runs the candidate under the original conditions.</p>
+
+    <h3>Start with the trace, not the score</h3>
+
+    <p>A final score tells us that something went wrong. A trace tells us where to look.</p>
+
+    <div class="recap">
+      <h3>The timeout failure, as a trace</h3>
+      <p><code>14: partial patch written to workspace</code><br><code>15: test tool times out</code><br><code>16: retry resumes from an older plan</code><br><code>17: work repeats; call budget exceeded</code></p>
+    </div>
+
+    <p>The tracer preserves the steps behind that summary: model responses, tool calls, results, retries, state changes, errors, time, and cost. It also records which component touched each step. Without that identity, a bad tool call could come from the model, the tool description, middleware, or stale memory, and we would have no way to tell.</p>
+
+    <p>More logs do not automatically create more insight. A million-token transcript can hide a two-line cause. <a href="../papers/agentic-harness-engineering.html">Agentic Harness Engineering</a> keeps raw task traces, summarizes each task, and then looks for patterns across tasks. Over ten iterations, its first-try Terminal-Bench 2 success rate rose from 69.7 to 77.0 percent. The final harness also worked across model families.</p>
+
+    <p>The study's edit-proposing agent was better at predicting fixes than regressions. Traces narrow the search, but they do not make the diagnosis correct. This is why <a href="../papers/scaling-laws-harnesses.html">Scaling Laws for Agent Harnesses</a> focuses on useful feedback, not raw tokens or tool calls. Activity matters only when it leaves valid evidence that can guide a later decision.</p>
+
+    <h3>Turn the trace into a testable diagnosis</h3>
+
+    <p>Next, the diagnostician explains what may have caused the failure. The result is a hypothesis, not a verdict.</p>
+
+    <p>Compare two diagnoses:</p>
+
+    <ul class="body">
+      <li>“The agent needs stronger reasoning.”</li>
+      <li>“After a tool timeout, middleware discards the last valid state, so the retry begins from a stale plan.”</li>
+    </ul>
+
+    <p>The first diagnosis invites a broad prompt rewrite. The second points to one component and predicts what should change in the next trace. It also reveals a regression to watch: saving more state may increase context cost.</p>
+
+    <p><a href="../papers/self-harness.html">Self-Harness</a> calls this weakness mining. On tasks withheld from the editing process, its largest reported gain was 21.4 percentage points on one of three tested models. The operating model found the weakness and proposed the edit without help from a stronger model. That is promising, but narrow. The lesson is not that diagnosis is solved. It is that repeated, model-specific failures make better edit targets than generic advice.</p>
+
+    <p>A good diagnosis separates three things: the final failure, the behavior that produced it, and the editable mechanism that may have caused that behavior. The third step remains a hypothesis until a controlled test supports it.</p>
+
+    <div class="callout"><p>A useful proposal names five things: the evidence, the likely cause, the component to change, the expected gain, and the regression to watch.</p></div>
+
+    <h3>Change one thing at a time</h3>
+
+    <p>The proposer turns the diagnosis into a candidate. In this case, it writes a small middleware patch that checkpoints the last valid state before a retry. A proposer might also edit a prompt, synthesize workflow code, or plan a weight update.</p>
+
+    <p>It receives only what it needs: the allowed edit surface, the current version, the failure pattern, passing behavior to preserve, and lessons from earlier attempts. It does not receive hidden tests or permission to rewrite the judge.</p>
+
+    <p>Small edits make the result easier to explain. <a href="../papers/skillopt.html">SkillOpt</a> limits how much the system may change in one edit. It was best or tied-best across all 52 reported model, benchmark, and harness combinations. But its gate is only as good as the tasks used to validate it, and the study did not test transfer to very different domains. The evidence supports bounded, validation-gated changes. It does not justify blind trust in one held-out set.</p>
+
+    <h3>Let the search controller choose where to look</h3>
+
+    <p>Once the proposer can generate changes, the search controller decides which candidate gets the next experiment. It chooses a candidate to build from, asks for variants, and balances trying a new direction against refining a promising one.</p>
+
+    <p>For the timeout failure, it might compare a full-state checkpoint with a smaller retry summary. It can then spend more trials on the version that recovers without breaching the budget.</p>
+
+    <div class="callout"><p>The proposer answers, “What change could we try?” The search controller answers, “Where should we spend the next experiment?”</p></div>
+
+    <p>A greedy keep-or-revert rule is the right first controller because it is easy to reproduce and hard to misunderstand. Richer search methods matter only after the baseline exposes a real problem, such as getting stuck or spending its budget badly.</p>
+
+    <p><a href="../papers/aide2.html">AIDE²</a> divided its budget across candidate families, refined candidates within each family, and restarted from the best-known system when progress stalled. The point is simple: a controller may mix search methods, but the mix should remain visible and reproducible.</p>
+
+    <h3>Run every candidate under the same conditions</h3>
+
+    <p>The experiment manager turns a candidate into a fair comparison. It creates an isolated workspace, pins dependencies, assigns tasks and seeds, enforces the budget, records logs, handles timeouts, and cleans up.</p>
+
+    <p>Its job is practical rather than interpretive. In the timeout experiment, it gives the old and new systems the same model, tools, tasks, permissions, and budget. If the checkpoint patch wins only by making more calls, it did not improve under the original contract. If it wins once and loses on repeats, we have an anecdote, not a result.</p>
+
+    <h2>Layer 3: What must survive the round?</h2>
+
+    <p>A long-running loop needs two kinds of persistence. Think of them as a lab notebook and a playbook. The evidence ledger is the lab notebook: complete enough to audit. Memory is the playbook: short enough to guide the next move.</p>
+
+    <p>Mixing them is dangerous. A plausible summary can quietly replace the run that might prove it wrong.</p>
+
+    <h3>Keep a complete evidence ledger</h3>
+
+    <p>The ledger stores the previous version, proposed diff, hypothesis, tasks, seeds, model, tools, permissions, budget, traces, evaluator outputs, and final decision. For the timeout experiment, it must answer a simple question months later: which middleware patch ran under which retry budget?</p>
+
+    <p>Evidence is complete, immutable, and sometimes awkward to read. Files are a strong default because they survive process restarts, support diffs and checksums, and remain open to human inspection. Keep rejected candidates too. Otherwise the controller may spend budget rediscovering the same failed edit.</p>
+
+    <h3>Use memory as a guide, not as proof</h3>
+
+    <p>Memory compresses experience into something the next round can use. <a href="../papers/reasoningbank.html">ReasoningBank</a> suggests a useful unit: a strategy distilled from both success and failure. Raw traces are too long and specific for every decision. Success-only summaries throw away the sharpest corrective signal.</p>
+
+    <p>But storing lessons is not the same as learning. Across six <a href="../papers/cl-bench.html">CL-BENCH</a> domains, giving the model its full prior history improved aggregate performance by 25.4 percent. ACE's compressed-memory approach improved it by 8.6 percent and cost more. This does not prove that full history will always win. It shows why a memory system should be compared with both no memory and uncompressed history.</p>
+
+    <p>Start small: an append-only ledger, an archive of candidates, a few distilled lessons, and a retrieval rule you can test. Memory may guide the next diagnosis. The ledger remains the source of truth.</p>
+
+    <h2>Layer 4: Who gets to say it improved?</h2>
+
+    <p>We now have a checkpoint patch and a fair run. We still do not have a trustworthy verdict. That requires three separate decisions.</p>
+
+    <div class="tablewrap" role="figure" aria-label="The three decisions made by a protected judge">
+      <div class="panel-eyebrow">Three questions, three decisions</div>
+      <table>
+        <thead><tr><th>Role</th><th>Question</th><th>In the timeout test</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Verifier</td><td>Is the run valid?</td><td>Correct output, same model, fixed budget, no private data</td></tr>
+          <tr><td class="mono">Evaluator</td><td>Is the candidate better?</td><td>More recoveries without regressions or excessive context cost</td></tr>
+          <tr><td class="mono">Promotion gate</td><td>Is the evidence strong enough?</td><td>Held-out gain survives repeated trials</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>First ask whether the run is valid</h3>
+
+    <p>The verifier checks hard constraints before anyone celebrates the score. Did the agent produce the correct files? Did it use the declared model and budget? Were the tests untouched? Can the run be reproduced?</p>
+
+    <p>For the timeout patch, a run that doubled its calls fails here, even if more tasks finished. Whenever possible, use deterministic checks such as compilers, schemas, checksums, unit tests, or exact simulators. Fuzzy tasks may still need a model or human judge, but hard checks should come first.</p>
+
+    <p>A valid result is not necessarily a useful one. A program can be correct and slower. A memory entry can be well-formed and harmful. This is why evaluation is a separate step.</p>
+
+    <h3>Then ask whether the candidate is better</h3>
+
+    <p>The evaluator compares value. In our example, it asks whether more tasks recover after timeouts, whether ordinary tasks still pass, how much extra context the checkpoint adds, and whether the gain transfers to new repositories.</p>
+
+    <p>“Better” is rarely one number. It may include success, generalization, reliability, cost, latency, maintainability, and safety. Keep those dimensions visible. A single score helps the search controller rank candidates, but a human should still see whether the gain came from better results, higher spend, or a newly tolerated failure.</p>
+
+    <p>Current loops work best when feedback is crisp and fast. Exact-match accuracy is easy to test. Scientific taste, maintainability, novelty, and long-term value are slower and easier to counterfeit.</p>
+
+    <h3>Promote by policy, not by excitement</h3>
+
+    <p>The promotion gate decides whether the candidate becomes <code>h[t+1]</code>. A valid patch may still fail if its gain is small, its context cost is large, or its regression rate is too high or unstable across repeats.</p>
+
+    <p>Set the gate before seeing the results. A sensible policy requires a valid run, improvement on held-out tasks, no unacceptable regression, and reliable performance under the original budget. Keep a final test sealed until selection ends. A gate used every round becomes feedback, so the search can eventually overfit it.</p>
+
+    <p><a href="../papers/self-harness.html">Self-Harness</a>, Agentic Harness Engineering, and <a href="../papers/skillopt.html">SkillOpt</a> all converge on bounded edits plus regression gates. The reason is simple. A self-improvement loop without a gate is only a self-modification loop. Change is guaranteed. Improvement is not.</p>
+
+    <p>The version manager then stores the previous version, candidate version, diff, receipt, and rollback path. Rejected candidates stay in the archive with the reason they failed.</p>
+
+    <h3>Protect the measurement path</h3>
+
+    <p>The candidate must not control the system that judges it. Reward hacking is not a job for another agent inside the loop. It is a threat that requires a real integrity boundary.</p>
+
+    <p>Keep these surfaces outside the editable system:</p>
+
+    <ul class="body">
+      <li>The objective and reward calculation</li>
+      <li>The verifier, evaluator, held-out tasks, and private labels</li>
+      <li>Permission limits and resource budgets</li>
+      <li>Audit logs, version history, and the production promotion path</li>
+    </ul>
+
+    <p>Chapter 1 showed why. Under optimization pressure, agents in the <a href="../papers/meta-agent-challenge.html">Meta-Agent Challenge</a> found routes to evaluation secrets. A score-maximizing system sees no moral difference between solving a task and changing how the task is scored. The architecture must make that difference physical.</p>
+
+    <p>Read-only mounts, separate credentials, checksums, sealed test services, least-privilege tools, and fixed budgets all help. “Do not cheat” may shape a proposal. It is not a security control.</p>
+
+    <p>Private evaluation helps, but it is not a complete defense. AIDE² reports the reward-hacking rate falling from 63% in its seed harness to 34% in a later selected harness, perhaps because visible-score exploits failed on private tests. Treat that result as provisional. The report did not release its full protocol and code, and a stronger optimizer may find a different path around the measurement.</p>
+
+    <p>Humans do not need to approve every tool call. They should retain authority over hard-to-reverse changes: rewriting the objective or judge, expanding permissions, updating weights or the search controller, and accepting noisy gains with conflicting metrics. The useful question is not “human in or out?” It is “which state transitions require human authority?”</p>
+
+    <h2>Which jobs need a language model?</h2>
+
+    <p>Not every box in the diagram should become an agent. Language models help when the work is semantic, such as reading a long trace or writing a patch. Ordinary code is better at bookkeeping, isolation, enforcement, and exact checks.</p>
+
+    <div class="tablewrap" role="figure" aria-label="Recommended implementation type for each group of responsibilities">
+      <div class="panel-eyebrow">Use the simplest reliable implementation</div>
+      <table>
+        <thead><tr><th>Responsibility</th><th>Best default</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Diagnosis and proposal</td><td>LLM-assisted</td><td>Reading traces and creating edits require semantic judgment</td></tr>
+          <tr><td class="mono">Search control</td><td>Algorithmic</td><td>Candidate choice, budgets, uncertainty, and stopping rules should stay explicit</td></tr>
+          <tr><td class="mono">Experiments, traces, ledger</td><td>Deterministic software</td><td>Runs and records must be comparable and reproducible</td></tr>
+          <tr><td class="mono">Verification and gating</td><td>Deterministic where possible</td><td>Tests, schemas, budgets, and acceptance rules should be hard to persuade</td></tr>
+          <tr><td class="mono">Evaluation and memory</td><td>Mixed</td><td>Fuzzy judgment may need a model or human; source history stays deterministic</td></tr>
+          <tr><td class="mono">Integrity boundary</td><td>OS and infrastructure controls</td><td>Security cannot depend on the optimizer following instructions</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>In the timeout example, only diagnosis and patch generation clearly benefit from a language model. Scheduling, tracing, budgets, tests, versioning, and promotion can remain simple code. This is a harness, not a committee of chatbots.</p>
+
+    <h2>When does the loop improve its ability to improve?</h2>
+
+    <p>Running experiments automatically is not enough. The stronger form of recursion appears when the loop changes the machinery that finds future improvements, and that new machinery helps produce the next accepted change.</p>
+
+    <p>We can ask for three increasingly strong receipts:</p>
+
+    <ol class="body">
+      <li><strong>First-order:</strong> the modified system performs better on held-out tasks.</li>
+      <li><strong>Second-order:</strong> the improvement transfers to task families that did not shape selection.</li>
+      <li><strong>Meta-level:</strong> the improved system is itself better at finding the next improvement under the same budget.</li>
+    </ol>
+
+    <p><a href="../papers/bilevel-autoresearch.html">Bilevel Autoresearch</a> gives us an early example. Its inner loop searched for better training configurations. An outer loop periodically rewrote that inner search mechanism in Python. The reported mean gain was about five times the inner loop alone, while tuning parameters inside the fixed mechanism produced no reliable improvement.</p>
+
+    <p>The evidence is still narrow: one pretraining benchmark, three repeats, small budgets, high variance, and no transfer test across task families. The result shows that a search procedure can itself become editable. It does not show that the edited procedure finds better improvements across settings.</p>
+
+    <p>AIDE² reached the same boundary. Its selected harness transferred to unseen tasks, but a follow-up test asked a harder question: could the improved harness produce a still better successor? It did not show a reliable gain. That negative result separates a better artifact from a process that is getting better at improving.</p>
+
+    <p>Most useful systems today will stay below that line, and that is fine. A harness that improves once, transfers, freezes, and serves millions of tasks may be more valuable than a loop that rewrites itself forever. Recursion is a mechanism, not a product requirement.</p>
+
+    <h2>Where the architecture still breaks down</h2>
+
+    <p>A clean diagram can make the field look more settled than it is. The hardest problems now sit between the boxes.</p>
+
+    <ul class="body">
+      <li><strong>Fuzzy evaluation.</strong> Correctness and speed are easy to measure. Scientific taste, maintainability, novelty, and long-term value are harder to measure reliably. A controller can optimize only the proxy it receives.</li>
+      <li><strong>Causal attribution.</strong> A trace makes diagnosis possible, not correct. Several components may interact, and a fix that looks causal on one task family may be incidental.</li>
+      <li><strong>Long horizons.</strong> Search can collapse around one idea. Memories can become stale. Short experiments rarely capture maintenance cost, permission creep, or future debugging burden.</li>
+      <li><strong>Recursive judgment.</strong> Evaluators may need improvement too. Changing an evaluator inside the loop it judges breaks the evidence chain, so it needs a higher-level, independent gate. We still do not have a general rule for when that gate can be automated.</li>
+    </ul>
+
+    <h2>So, did the timeout patch improve the agent?</h2>
+
+    <p>Not on the evidence we started with. The 12 percent run broke its budget, regressed on tasks that used to pass, and exposed evaluation examples to the proposer. The verifier should reject that run before its higher score enters the discussion.</p>
+
+    <p>The patch may still be useful. Keep the diff and traces, then rerun it under the original budget on held-out tasks and a sealed final test. Until it passes, <code>h[t]</code> stays in place. That is not a failed loop. It is the loop protecting its own claim.</p>
+
+    <h2>Build the smallest honest system first</h2>
+
+    <p>The four-layer architecture may look heavier than Chapter 2. Do not build all of it at once. Build the smallest system that can disprove its own improvement claim.</p>
+
+    <ol class="body">
+      <li><strong>Name one mutable artifact.</strong> Start with a prompt, skill, or small harness module.</li>
+      <li><strong>Freeze one judge.</strong> Use deterministic checks and a held-out gate.</li>
+      <li><strong>Save one complete receipt.</strong> Keep the previous version, diff, tasks, traces, score, cost, and decision.</li>
+      <li><strong>Use greedy keep-or-revert.</strong> Establish a baseline before adding tree search or evolution.</li>
+      <li><strong>Inspect failures manually.</strong> Learn the failure patterns before automating diagnosis.</li>
+      <li><strong>Add complexity only to fix a measured failure.</strong> Memory needs a no-memory control. Richer search needs evidence that greedy search is stuck.</li>
+    </ol>
+
+    <p>Make the first loop almost boring. Prove that each boundary works. Then add one new capability at a time and make it earn its place.</p>
+
+    <h2>The principle to carry forward</h2>
+
+    <p>The papers use different names: evolver, critic, curator, selector, archive, reward model. Underneath those names, the same structure keeps returning. The system changes one explicit surface. It diagnoses from traces, tests a bounded proposal under fixed conditions, preserves the result, and asks an independent gate for permission to continue.</p>
+
+    <p>The deepest lesson is not that recursive self-improvement needs more agents. It needs a separation of powers.</p>
+
+    <div class="callout"><p>The loop may edit its prompt, memory, tools, workflow, search policy, or weights. It may not edit its evaluator inside the same loop that evaluator judges.</p></div>
+
+    <p>Once that boundary is real, the remaining questions become concrete. What should change? What evidence would justify the change? And how cheaply can the next experiment prove us wrong?</p>
+
+    <div class="recap">
+      <h3>Chapter in one sentence</h3>
+      <p>A recursive self-improvement system turns evidence into a bounded change and lets a protected judge decide whether it may shape the next round.</p>
+    </div>
+
+    <div class="refs">
+      <h2>Research notes used in this chapter</h2>
+      <ul>
+        <li><a href="../papers/agentic-harness-engineering.html">Agentic Harness Engineering</a> · component, experience, and decision observability</li>
+        <li><a href="../papers/self-harness.html">Self-Harness</a> · weakness mining, bounded proposals, and regression-gated self-evolution</li>
+        <li><a href="../papers/skillopt.html">SkillOpt</a> · optimizer discipline for text artifacts and bounded edit budgets</li>
+        <li><a href="../papers/bilevel-autoresearch.html">Bilevel Autoresearch</a> · rewriting the search mechanism itself</li>
+        <li><a href="../papers/aide2.html">AIDE²</a> · nested loops, portfolio search, hidden evaluation, transfer, and the negative test of further improvement</li>
+        <li><a href="../papers/reasoningbank.html">ReasoningBank</a> · distilled strategies from success and failure</li>
+        <li><a href="../papers/cl-bench.html">Continual Learning Bench</a> · measured gain over a no-learning control</li>
+        <li><a href="../papers/scaling-laws-harnesses.html">Scaling Laws for Agent Harnesses</a> · effective feedback rather than raw spend</li>
+        <li><a href="../papers/life-harness.html">LIFE-HARNESS</a> · improving the interface instead of the model</li>
+        <li><a href="../papers/meta-agent-challenge.html">The Meta-Agent Challenge</a> · autonomous agent development and emergent reward hacking</li>
+        <li>Lilian Weng, <a href="https://lilianweng.github.io/posts/2026-07-04-harness/" target="_blank" rel="noopener">Harness Engineering for Self-Improvement</a> · the survey that prompted this chapter</li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="ch02.html"><div><div class="label">Previous</div><div class="title">02 · Build your first agent improvement loop</div></div></a>
+      <a class="next" href="../papers/autoresearch.html"><div><div class="label">Continue with the research</div><div class="title">autoresearch</div></div></a>
+    </div>
+  </article>
+</div>
+
+<footer class="site"><div class="foot-inner"><span>The RSI Book · an open book</span></div></footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid=mermaid;
+  const lightVars={primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars={primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid=function(){
+    const dark=document.documentElement.getAttribute('data-theme')==='dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){if(!el.dataset.src)el.dataset.src=el.textContent;el.removeAttribute('data-processed');el.innerHTML=el.dataset.src;});
+    mermaid.initialize({startOnLoad:false,theme:'base',fontFamily:"'Geist', sans-serif",flowchart:{curve:'linear'},themeVariables:dark?darkVars:lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar=document.getElementById('progress');
+  addEventListener('scroll',()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;bar.style.width=(max>0?(h.scrollTop/max)*100:0)+'%';},{passive:true});
+  const btn=document.getElementById('toc-toggle');
+  const toc=document.getElementById('toc');
+  let scrim=document.querySelector('.toc-scrim');
+  if(!scrim){scrim=document.createElement('div');scrim.className='toc-scrim';document.body.appendChild(scrim);}
+  function setDrawer(open){toc.classList.toggle('open',open);scrim.classList.toggle('show',open);document.body.classList.toggle('drawer-open',open);btn.setAttribute('aria-expanded',open);btn.textContent=open?'Close':'Contents';}
+  btn.addEventListener('click',()=>setDrawer(!toc.classList.contains('open')));
+  scrim.addEventListener('click',()=>setDrawer(false));
+  toc.addEventListener('click',e=>{if(e.target.closest('a'))setDrawer(false);});
+  const root=document.documentElement;
+  const themeBtn=document.getElementById('theme-toggle');
+  function setTheme(t){root.setAttribute('data-theme',t);try{localStorage.setItem('rsi_theme',t);}catch(e){}if(themeBtn)themeBtn.setAttribute('aria-pressed',t==='dark');if(window.renderMermaid)window.renderMermaid();}
+  if(themeBtn){themeBtn.setAttribute('aria-pressed',root.getAttribute('data-theme')==='dark');themeBtn.addEventListener('click',()=>setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'));}
+  const shell=document.querySelector('.shell');
+  const sidebarBtn=document.getElementById('sidebar-toggle');
+  try{if(localStorage.getItem('rsi_sidebar')==='hidden')shell.classList.add('toc-hidden');}catch(e){}
+  if(sidebarBtn){sidebarBtn.addEventListener('click',()=>{const hidden=shell.classList.toggle('toc-hidden');try{localStorage.setItem('rsi_sidebar',hidden?'hidden':'open');}catch(e){}});}
+</script>
+</body>
+</html>
