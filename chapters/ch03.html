@@ -3,27 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2212%22 fill=%22%23f2f0e9%22/%3E%3Cpath d=%22M22 28h56M22 50h38M22 72h48%22 stroke=%22%23b54332%22 stroke-width=%228%22 stroke-linecap=%22square%22/%3E%3C/svg%3E">
 <title>Anatomy of a Recursive Self-Improvement System · The RSI Book</title>
 <meta name="description" content="Chapter 03 of The RSI Book: the components of a recursive self-improvement system, how they interact, and what must remain outside the editable loop.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=Literata:opsz,wght@7..72,400;7..72,500;7..72,600&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/book-page.css">
 <link rel="stylesheet" href="../assets/responsive.css">
 <link rel="stylesheet" href="../assets/reading.css">
-<script>(function(){try{var t=localStorage.getItem('rsi_theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();</script>
+<link rel="stylesheet" href="../assets/chapter.css">
 </head>
-<body>
+<body class="research-chapter">
 <div id="progress" aria-hidden="true"></div>
 
 <header class="site">
   <div class="site-inner">
-    <button id="sidebar-toggle" class="iconbtn" aria-label="Hide sidebar" title="Hide sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="9" y1="4" x2="9" y2="20"/></svg></button>
-    <div class="lockup"><span class="book-tag">An Open Book on Recursive Self-improvement</span></div>
+    <button id="sidebar-toggle" class="contents-button" aria-label="Toggle book contents" aria-controls="toc" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Contents</span></button>
+    <a class="chapter-wordmark" href="../index.html" aria-label="The RSI Book, home"><span class="chapter-wordmark__index">RSI</span><span class="chapter-wordmark__copy"><strong>The RSI Book</strong></span></a>
+    <div class="chapter-location">Chapter 03 <span>·</span> Research edition</div>
     <div class="header-right">
-      <a href="https://github.com/bhavsarpratik/rsi" class="iconbtn" target="_blank" rel="noopener" aria-label="GitHub repository" title="View on GitHub"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.5a10.5 10.5 0 0 0-3.32 20.46c.52.1.71-.23.71-.5l-.01-1.77c-2.92.64-3.54-1.4-3.54-1.4-.48-1.21-1.17-1.54-1.17-1.54-.95-.65.07-.64.07-.64 1.05.07 1.6 1.08 1.6 1.08.94 1.6 2.46 1.14 3.06.87.1-.68.37-1.14.66-1.4-2.33-.27-4.78-1.17-4.78-5.18 0-1.15.41-2.08 1.08-2.81-.11-.27-.47-1.34.1-2.79 0 0 .88-.28 2.88 1.07a9.9 9.9 0 0 1 5.24 0c2-1.35 2.88-1.07 2.88-1.07.57 1.45.21 2.52.1 2.79.67.73 1.08 1.66 1.08 2.81 0 4.02-2.46 4.9-4.8 5.16.38.33.71.97.71 1.96l-.01 2.9c0 .28.19.61.72.5A10.5 10.5 0 0 0 12 1.5z"/></svg></a>
-      <button id="theme-toggle" class="iconbtn" aria-label="Toggle dark mode" aria-pressed="false" title="Toggle theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg></button>
+      <a href="https://github.com/bhavsarpratik/rsi" class="header-link" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
       <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
     </div>
   </div>
@@ -40,7 +40,7 @@
     <h1>Anatomy of a Recursive Self-Improvement System</h1>
     <p class="standfirst">What changes, what judges it, and what must remain outside the loop.</p>
     <div class="byline">
-      <span>Pratik Bhavsar</span>
+      <span class="author-name"><small>Written by</small> <b>PRATIK BHAVSAR</b></span>
       <span>20 min read</span>
       <span>July 2026</span>
     </div>
@@ -61,16 +61,18 @@
 
     <div class="fig" role="figure" aria-label="A candidate must pass evidence and promotion gates before becoming the next system">
       <div class="panel-eyebrow">One recursive step</div>
-      <div class="mermaid">
-flowchart LR
-    CURRENT["Current system h[t]"] --> RUN["Run and observe"]
-    RUN --> PROPOSE["Propose candidate h'"]
-    PROPOSE --> TEST["Experiment under fixed conditions"]
-    TEST --> JUDGE["Verify and evaluate"]
-    JUDGE --> GATE{"Promote?"}
-    GATE -->|"yes"| NEXT["Next system h[t+1]"]
-    GATE -->|"no"| REJECT["Reject and preserve evidence"]
-    NEXT --> CURRENT
+      <div class="process-map process-map--recursive">
+        <ol class="process-runway" aria-label="One recursive improvement step">
+          <li class="process-phase process-phase--current"><span class="process-kicker">State · t</span><strong>Current system h[t]</strong><small>The protected baseline for this round.</small></li>
+          <li class="process-phase"><span class="process-kicker">Observe</span><strong>Run and propose h′</strong><small>Turn failure evidence into one candidate.</small></li>
+          <li class="process-phase"><span class="process-kicker">Experiment</span><strong>Hold conditions fixed</strong><small>Compare the candidate with the baseline.</small></li>
+          <li class="process-phase process-phase--gate"><span class="process-kicker">Protected judge</span><strong>Verify, evaluate, gate</strong><small>The candidate cannot alter this decision path.</small></li>
+        </ol>
+        <div class="process-branches" aria-label="Promotion outcomes">
+          <div class="process-result process-result--accept"><span>Accept</span><strong>Promote as h[t+1]</strong></div>
+          <div class="process-result process-result--reject"><span>Reject</span><strong>Keep h[t] and preserve evidence</strong></div>
+        </div>
+        <div class="process-return"><span aria-hidden="true">↺</span> Only an accepted system produces the next round of improvement evidence.</div>
       </div>
       <div class="caption">The loop becomes recursive only when an accepted change helps produce the next round of evidence. Repeating the same system many times is search, not yet self-improvement.</div>
     </div>
@@ -92,28 +94,20 @@ flowchart LR
 
     <div class="fig" role="figure" aria-label="The components of a recursive self-improvement system">
       <div class="panel-eyebrow">A separation of powers</div>
-      <div class="mermaid">
-flowchart TD
-    subgraph TARGET["1. System being improved"]
-      SYSTEM["Mutable artifact"] --> EXEC["Executor and environment"]
-    end
-    subgraph ENGINE["2. Improvement engine"]
-      OBSERVE["Observe and diagnose"] --> PROPOSE["Propose and search"]
-      PROPOSE --> EXPERIMENT["Run controlled experiments"]
-    end
-    subgraph STATE["3. Persistent state"]
-      EVIDENCE["Evidence ledger and archive"] --> MEMORY["Distilled memory"]
-    end
-    subgraph JUDGE["4. Protected judge"]
-      VERIFY["Verify validity"] --> EVALUATE["Evaluate utility"]
-      EVALUATE --> GATE{"Promotion gate"}
-    end
-    EXEC --> OBSERVE
-    OBSERVE --> EVIDENCE
-    MEMORY --> PROPOSE
-    EXPERIMENT --> VERIFY
-    GATE -->|"accept"| SYSTEM
-    GATE -->|"reject"| EVIDENCE
+      <div class="power-map">
+        <section class="power-zone power-zone--operational">
+          <header><span>Candidate-facing surface</span><strong>Change, test, and remember</strong></header>
+          <div class="power-grid">
+            <div class="power-layer"><span>01</span><strong>System being improved</strong><ul><li>Mutable artifact</li><li>Executor + environment</li></ul></div>
+            <div class="power-layer"><span>02</span><strong>Improvement engine</strong><ul><li>Observe + diagnose</li><li>Propose + experiment</li></ul></div>
+            <div class="power-layer"><span>03</span><strong>Persistent state</strong><ul><li>Evidence ledger</li><li>Archive + memory</li></ul></div>
+          </div>
+        </section>
+        <div class="power-transfer"><span>Evidence</span><span aria-hidden="true">→</span><span>Verdict</span></div>
+        <section class="power-zone power-zone--protected">
+          <header><span>Integrity boundary</span><strong>Protected judge</strong></header>
+          <div class="power-layer power-layer--judge"><span>04</span><strong>Authority stays outside</strong><ul><li>Verify validity</li><li>Evaluate utility</li><li>Promotion gate</li></ul></div>
+        </section>
       </div>
       <div class="caption">These are responsibilities, not necessarily separate programs. A small system can combine the first three in one process. The judge still needs a boundary the candidate cannot cross.</div>
     </div>
@@ -186,6 +180,14 @@ flowchart TD
 
     <div class="callout"><p>A useful proposal names five things: the evidence, the likely cause, the component to change, the expected gain, and the regression to watch.</p></div>
 
+    <h3>Locate the behavior before editing the code</h3>
+
+    <p>A diagnosis can name the right mechanism and still produce an incomplete patch. In a production harness, one behavior may cross a tool schema, runtime middleware, state resets, mirrored implementations, fallback paths, and documentation. Finding every source location involved in that behavior is a separate job called behavior localization.</p>
+
+    <p><a href="../papers/harness-handbook.html">Harness Handbook</a> builds a behavior-centered map of the repository, including execution stages and the places where shared state is read and written. A planner moves from the requested behavior to candidate code locations, then verifies each one against the current source before proposing an edit. The map guides the search; the repository remains the authority.</p>
+
+    <p>On 30 modification requests each for Codex and Terminus-2, handbook-assisted planning raised overall plan win rates by 10.0 and 18.9 percentage points while reducing planner-token use by 12.7% and 8.6%. The experiment measured localization and plans, not executed patches, so it supports adding this step to the loop without showing that the resulting harnesses improved.</p>
+
     <h3>Change one thing at a time</h3>
 
     <p>The proposer turns the diagnosis into a candidate. In this case, it writes a small middleware patch that checkpoints the last valid state before a retry. A proposer might also edit a prompt, synthesize workflow code, or plan a weight update.</p>
@@ -236,7 +238,7 @@ flowchart TD
 
     <p>We now have a checkpoint patch and a fair run. We still do not have a trustworthy verdict. That requires three separate decisions.</p>
 
-    <div class="tablewrap" role="figure" aria-label="The three decisions made by a protected judge">
+    <div class="tablewrap tablewrap--judge" role="figure" aria-label="The three decisions made by a protected judge">
       <div class="panel-eyebrow">Three questions, three decisions</div>
       <table>
         <thead><tr><th>Role</th><th>Question</th><th>In the timeout test</th></tr></thead>
@@ -299,7 +301,7 @@ flowchart TD
 
     <p>Not every box in the diagram should become an agent. Language models help when the work is semantic, such as reading a long trace or writing a patch. Ordinary code is better at bookkeeping, isolation, enforcement, and exact checks.</p>
 
-    <div class="tablewrap" role="figure" aria-label="Recommended implementation type for each group of responsibilities">
+    <div class="tablewrap tablewrap--implementation" role="figure" aria-label="Recommended implementation type for each group of responsibilities">
       <div class="panel-eyebrow">Use the simplest reliable implementation</div>
       <table>
         <thead><tr><th>Responsibility</th><th>Best default</th><th>Why</th></tr></thead>
@@ -391,6 +393,7 @@ flowchart TD
         <li><a href="../papers/skillopt.html">SkillOpt</a> · optimizer discipline for text artifacts and bounded edit budgets</li>
         <li><a href="../papers/bilevel-autoresearch.html">Bilevel Autoresearch</a> · rewriting the search mechanism itself</li>
         <li><a href="../papers/aide2.html">AIDE²</a> · nested loops, portfolio search, hidden evaluation, transfer, and the negative test of further improvement</li>
+        <li><a href="../papers/harness-handbook.html">Harness Handbook</a> · behavior localization, source verification, and synchronized implementation memory</li>
         <li><a href="../papers/reasoningbank.html">ReasoningBank</a> · distilled strategies from success and failure</li>
         <li><a href="../papers/cl-bench.html">Continual Learning Bench</a> · measured gain over a no-learning control</li>
         <li><a href="../papers/scaling-laws-harnesses.html">Scaling Laws for Agent Harnesses</a> · effective feedback rather than raw spend</li>
@@ -407,21 +410,8 @@ flowchart TD
   </article>
 </div>
 
-<footer class="site"><div class="foot-inner"><span>The RSI Book · an open book</span></div></footer>
+<footer class="site"><div class="foot-inner"><div><strong>The RSI Book</strong><span>An open book on recursive self-improvement.</span></div><a href="../index.html">Book home <span aria-hidden="true">↑</span></a></div></footer>
 
-<script type="module">
-  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
-  window.mermaid=mermaid;
-  const lightVars={primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
-  const darkVars={primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
-  window.renderMermaid=function(){
-    const dark=document.documentElement.getAttribute('data-theme')==='dark';
-    document.querySelectorAll('.mermaid').forEach(function(el){if(!el.dataset.src)el.dataset.src=el.textContent;el.removeAttribute('data-processed');el.innerHTML=el.dataset.src;});
-    mermaid.initialize({startOnLoad:false,theme:'base',fontFamily:"'Geist', sans-serif",flowchart:{curve:'linear'},themeVariables:dark?darkVars:lightVars});
-    mermaid.run({querySelector:'.mermaid'});
-  };
-  window.renderMermaid();
-</script>
 <script>
   const bar=document.getElementById('progress');
   addEventListener('scroll',()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;bar.style.width=(max>0?(h.scrollTop/max)*100:0)+'%';},{passive:true});
@@ -433,14 +423,10 @@ flowchart TD
   btn.addEventListener('click',()=>setDrawer(!toc.classList.contains('open')));
   scrim.addEventListener('click',()=>setDrawer(false));
   toc.addEventListener('click',e=>{if(e.target.closest('a'))setDrawer(false);});
-  const root=document.documentElement;
-  const themeBtn=document.getElementById('theme-toggle');
-  function setTheme(t){root.setAttribute('data-theme',t);try{localStorage.setItem('rsi_theme',t);}catch(e){}if(themeBtn)themeBtn.setAttribute('aria-pressed',t==='dark');if(window.renderMermaid)window.renderMermaid();}
-  if(themeBtn){themeBtn.setAttribute('aria-pressed',root.getAttribute('data-theme')==='dark');themeBtn.addEventListener('click',()=>setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'));}
   const shell=document.querySelector('.shell');
   const sidebarBtn=document.getElementById('sidebar-toggle');
   try{if(localStorage.getItem('rsi_sidebar')==='hidden')shell.classList.add('toc-hidden');}catch(e){}
-  if(sidebarBtn){sidebarBtn.addEventListener('click',()=>{const hidden=shell.classList.toggle('toc-hidden');try{localStorage.setItem('rsi_sidebar',hidden?'hidden':'open');}catch(e){}});}
+  if(sidebarBtn){sidebarBtn.setAttribute('aria-expanded',!shell.classList.contains('toc-hidden'));sidebarBtn.addEventListener('click',()=>{const hidden=shell.classList.toggle('toc-hidden');sidebarBtn.setAttribute('aria-expanded',!hidden);try{localStorage.setItem('rsi_sidebar',hidden?'hidden':'open');}catch(e){}});}
 </script>
 </body>
 </html>

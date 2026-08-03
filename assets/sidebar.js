@@ -14,7 +14,7 @@
     {
       title: 'Chapters',
       items: [
-        { number: '01', label: 'The State of Recursive Self-Improvement', path: 'index.html' },
+        { number: '01', label: 'The State of Recursive Self-Improvement', path: 'chapters/ch01.html' },
         { number: '02', label: 'Build your first agent improvement loop', path: 'chapters/ch02.html' },
         { number: '03', label: 'Anatomy of a Recursive Self-Improvement System', path: 'chapters/ch03.html' },
       ],
@@ -39,6 +39,7 @@
         { number: '15', label: 'Self-Harness', path: 'papers/self-harness.html' },
         { number: '16', label: 'HarnessX: Harness Foundry', path: 'papers/harnessx.html' },
         { number: '17', label: 'AIDE²: Net-positive RSI', path: 'papers/aide2.html' },
+        { number: '18', label: 'Harness Handbook', path: 'papers/harness-handbook.html' },
       ],
     },
   ];

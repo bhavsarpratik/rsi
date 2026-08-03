@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%92%A5%3C/text%3E%3C/svg%3E">
+<title>Harness Handbook: Finding What an Agent Must Change · Research Papers</title>
+<meta name="description" content="A critical reading note on Harness Handbook, a behavior-centric map that helps coding agents locate every source site involved in an agent-harness change.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/book-page.css">
+<link rel="stylesheet" href="../assets/responsive.css">
+<link rel="stylesheet" href="../assets/reading.css">
+<link rel="stylesheet" href="../assets/chapter.css">
+<link rel="stylesheet" href="../assets/research.css">
+<style>
+  @media(max-width:600px){
+    .fig.behavior-map .mermaid{justify-content:flex-start}
+    .fig.behavior-map .mermaid svg{min-width:720px!important;max-width:none!important;height:auto}
+  }
+</style>
+</head>
+<body class="research-chapter research-note">
+<div id="progress" aria-hidden="true"></div>
+
+<header class="site">
+  <div class="site-inner">
+    <button id="sidebar-toggle" class="contents-button" aria-label="Toggle book contents" aria-controls="toc" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>Contents</span></button>
+    <a class="chapter-wordmark" href="../index.html" aria-label="The RSI Book, home"><span class="chapter-wordmark__index">RSI</span><span class="chapter-wordmark__copy"><strong>The RSI Book</strong></span></a>
+    <div class="chapter-location">Research notes <span>·</span> 2026</div>
+    <div class="header-right">
+      <a href="https://github.com/bhavsarpratik/rsi" class="header-link" target="_blank" rel="noopener">GitHub <span aria-hidden="true">↗</span></a>
+      <button id="toc-toggle" aria-expanded="false" aria-controls="toc">Contents</button>
+    </div>
+  </div>
+</header>
+
+<div class="shell">
+  <aside class="toc" id="toc">
+    <nav class="chapters" aria-label="Navigation" data-sidebar></nav>
+    <script src="../assets/sidebar.js"></script>
+  </aside>
+
+  <article>
+    <div class="chapter-eyebrow">Research Paper Deep-Dive</div>
+    <h1>Harness Handbook: Finding What an Agent Must Change</h1>
+    <p class="standfirst">A diagnosis can name the behavior that failed and still leave a coding agent searching the wrong files. Harness Handbook builds a behavior-centered route from a change request to every source location that may need to move.</p>
+    <div class="byline">
+      <span>Ruhan Wang et al.</span>
+      <span>arXiv:2607.13285v1</span>
+      <span>14 Jul 2026</span>
+    </div>
+    <div class="note-credit">Reading note by <strong>PRATIK BHAVSAR</strong></div>
+
+    <p class="lede">Suppose an agent repeatedly loses its last valid plan after a tool timeout. The diagnosis sounds precise: checkpoint state before retrying. In a toy harness, that may be one function. In a production system, the same behavior can cross a tool schema, runtime middleware, state-reset logic, a fallback path, session recording, and documentation. Fix the obvious branch and the agent may still fail somewhere colder.</p>
+
+    <p>That is the problem this paper isolates. Software repositories are organized by files, functions, and modules. Change requests are expressed as behavior: preserve state across compaction, mask secrets before recording, or keep two shell tools consistent. The missing translation between those two views is <strong>behavior localization</strong>—finding every implementation site involved in the requested behavior.</p>
+
+    <div class="callout"><p>A diagnosis tells the loop what behavior may be wrong. Behavior localization tells it where a complete change must land.</p></div>
+
+    <h2>The missing step between diagnosis and an edit</h2>
+
+    <p><a href="agentic-harness-engineering.html">Agentic Harness Engineering</a> and <a href="self-harness.html">Self-Harness</a> begin with failure traces, mine weaknesses, and propose harness changes. Harness Handbook studies the step between the weakness and the patch. Once the diagnosis says “retry state becomes stale,” how does the planner find initialization, resets, reads, writes, mirrored implementations, and documentation without opening an entire repository?</p>
+
+    <p>Ordinary search helps when the request and code use the same words. It is weaker when a behavior is distributed or when its rare path has a different name. A repository map has the opposite problem: it can show the file tree without explaining which pieces cooperate to produce one runtime behavior. The paper reorganizes that implementation knowledge around what the harness does.</p>
+
+    <p>This is a prerequisite for a bounded edit. The loop cannot honestly claim to “change one thing” if the thing is a behavior implemented in six places and it edits only three.</p>
+
+    <h2>How the handbook turns behavior into source locations</h2>
+
+    <p>The system combines deterministic static analysis with organization assisted by a large language model (LLM). Static analysis extracts files, functions, signatures, source ranges, call edges, and named external boundaries. A model then groups those fixed facts into runtime stages and writes the behavioral explanations. It may explain the graph, but it may not invent or rewrite source identities.</p>
+
+    <p>The resulting handbook has two connected views:</p>
+
+    <ul class="body">
+      <li><strong>An L1–L3 document tree.</strong> L1 describes the whole system, L2 describes an execution stage, and L3 links that stage to a concrete function, source region, or file.</li>
+      <li><strong>A state-register view.</strong> It records state that crosses stages and lists where each register is read and written.</li>
+    </ul>
+
+    <p>The planner navigates those views with Behavior-Guided Progressive Disclosure, or BGPD. It starts with the behavior, narrows to relevant stages, follows shared state and call relations, then opens the current repository to verify every candidate location before producing an edit plan.</p>
+
+    <div class="fig behavior-map" role="figure" aria-label="Behavior-Guided Progressive Disclosure narrows a change request through behavioral stages and shared state before verifying exact source locations">
+      <div class="panel-eyebrow">From a behavioral request to a grounded plan</div>
+      <div class="mermaid">
+flowchart LR
+    REQUEST["Behavioral change request"] --> OVERVIEW["L1 system overview"]
+    OVERVIEW --> STAGES["L2 execution stages"]
+    STAGES --> UNITS["L3 functions, regions, or files"]
+    STAGES --> STATE["Cross-stage state register"]
+    STATE --> UNITS
+    UNITS --> VERIFY["Verify against current source"]
+    VERIFY --> PLAN["Bounded edit plan"]
+      </div>
+      <div class="caption">The handbook narrows the search; it does not replace the repository. Every proposed location must still resolve to current source before it enters the plan.</div>
+    </div>
+
+    <p>That last boundary matters. The handbook is compressed, model-assisted memory. The repository is evidence. If a locator no longer resolves after a change, the system freezes that entry and excludes it from localization rather than guessing where it moved.</p>
+
+    <h2>How the map survives the code changing</h2>
+
+    <p>A generated architecture document normally starts decaying as soon as the first patch lands. Harness Handbook treats synchronization as part of the modification workflow. Every non-empty diff triggers an update. The system reparses changed source, aligns old and new units using fingerprints or file hashes, and refreshes only the affected entries when the larger stage structure remains valid.</p>
+
+    <p>If the structure no longer fits, it rebuilds the relevant organization using the same leaf mode and stored configuration. Unparsed or unclassified content stays visible in a coverage record instead of receiving a confident fictional description.</p>
+
+    <p>This gives the paper its strongest connection to persistent agent improvement. The map is not a static explanation prepared for one edit. It is state that changes with the artifact and can guide the next round. Yet synchronization alone is not learning: the paper still needs a protected performance comparison before it can claim that this persistent state makes an agent better at improving itself.</p>
+
+    <h2>What the experiment tested</h2>
+
+    <p>The evaluation isolates planning. A read-only planner powered by DeepSeek-V4-Pro receives one of 30 behavior-driven modification requests for each of two open-source harnesses. The baseline explores the repository directly. The assisted arm receives the handbook as a navigable skill and must verify handbook locations against the same repository snapshot. Requests, model, tools, decoding settings, and planning contract stay fixed.</p>
+
+    <div class="tablewrap" role="figure" aria-label="The two agent harnesses and evaluation setup used in the Harness Handbook experiment">
+      <div class="panel-eyebrow">Two very different repository scales</div>
+      <table>
+        <thead><tr><th>Harness</th><th>Language</th><th>Source files</th><th>Handbook leaf</th><th>Requests</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Terminus-2</td><td>Python</td><td>6</td><td>Function or source region</td><td>30</td></tr>
+          <tr><td class="mono">Codex</td><td>Rust</td><td>2,267</td><td>File</td><td>30</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The request set is evenly divided among three kinds of localization problem. Query requests alter an existing rule. Cross-file requests add a capability that must pass through several layers. Search-hostile requests hide relevant code in mirrored implementations, fallback branches, or cold paths. Difficulty labels separately capture whether the change touches one obvious site or follows indirect coupling across the system.</p>
+
+    <p>Three LLM judges—GPT-5.5, Opus 4.8, and DeepSeek-V4-Pro—score localization, scope control, and reasoning. The paper also compares predicted files and symbols with independent reference plans generated by GPT-5.5 and Opus 4.8. Planning token use measures the cost visible to the planner, including handbook and source context.</p>
+
+    <h2>What the results actually show</h2>
+
+    <p>Handbook assistance improved planning while consuming fewer planner tokens. On Codex, its overall plan win rate was 38.3% against 28.3% for direct repository exploration. On Terminus-2, it was 45.6% against 26.7%. These are win rates with ties, so the two arms are not expected to add to 100%.</p>
+
+    <div class="tablewrap" role="figure" aria-label="Plan win rates and planner token use with and without Harness Handbook assistance">
+      <div class="panel-eyebrow">Planning quality rose while planner context fell</div>
+      <table>
+        <thead><tr><th>Harness</th><th>Baseline win rate</th><th>Handbook win rate</th><th>Planner tokens</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Codex</td><td>28.3%</td><td>38.3%</td><td>102k → 89k, −12.7%</td></tr>
+          <tr><td class="mono">Terminus-2</td><td>26.7%</td><td>45.6%</td><td>58k → 53k, −8.6%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Agreement with the stronger reference planners improved in every reported recall, precision, and F1 comparison. F1 combines precision and recall into one score. Across both file and symbol granularity, its gain ranged from 5.0 to 18.8 percentage points. Complete misses—plans with zero overlap against the reference—never increased and fell by as much as 25.9 points.</p>
+
+    <p>The direction also held across all three request types. The largest gains appeared where the paper's idea should matter most: scattered implementation sites, cross-module behavior, and code paths that keyword search struggles to expose. That consistency is more informative than any one headline number.</p>
+
+    <h2>What the results do not show</h2>
+
+    <p>The experiment stops at the plan. Its judges explicitly do not grade the final diff or execution correctness. We therefore do not know whether the additional locations produced patches that compiled, passed regression tests, improved task performance, or avoided new failures. Better localization is a plausible cause of better edits, but this paper does not measure that link.</p>
+
+    <p>The ground truth is also softer than a human-validated patch set. Large language models build the answer keys, generate the reference plans, and judge plan quality. Using multiple models and leakage-safe pristine source reduces dependence on one judge, but agreement with a stronger model is not the same as demonstrated code correctness.</p>
+
+    <p>The empirical base contains two harnesses and 60 designed requests, spanning six Python files at one end and 2,267 Rust files at the other. It does not establish transfer to other languages, architectures, real issue distributions, or repositories the handbook builder was not tuned around. Terminus-2 also begins with a trusted execution-stage skeleton, while Codex uses a coarser file-level representation inferred from the repository.</p>
+
+    <p>Finally, the reported cost reduction covers planner tokens. The paper does not provide an end-to-end comparison that includes initial handbook construction, static-analysis adapters, semantic organization, and repeated resynchronization. The map can make each plan cheaper while still requiring substantial infrastructure to create and maintain.</p>
+
+    <div class="callout"><p>The paper demonstrates a better route to an edit plan. It does not demonstrate a better edit, a better harness, or a self-improving agent.</p></div>
+
+    <h2>Where it fits in recursive self-improvement</h2>
+
+    <p>Harness Handbook is not itself a recursive self-improvement (RSI) result. It does not diagnose a failure from task traces, execute a candidate, evaluate the modified harness, or promote a winner into the next round. The authors say that closing this autonomous loop is their next step.</p>
+
+    <p>Its contribution is narrower and still important. In the loop taught in <a href="../chapters/ch03.html">Chapter 3</a>, it belongs between diagnosis and proposal:</p>
+
+    <div class="recap">
+      <h3>The expanded improvement loop</h3>
+      <p>trace → diagnosis → behavior localization → source-verified plan → bounded edit → protected evaluation → promote or reject</p>
+    </div>
+
+    <p>This addition becomes more valuable as the mutable artifact grows. A prompt needs no call graph. A production harness may have thousands of files, mirrored tool surfaces, and state that crosses several execution stages. At that scale, incomplete localization becomes a distinct failure mode: the loop understands the bug, writes a reasonable patch, and still leaves part of the old behavior alive.</p>
+
+    <h2>What we should carry into the book</h2>
+
+    <ol class="body">
+      <li><strong>Name behavior localization as its own step.</strong> Diagnosis identifies a likely mechanism; localization connects that mechanism to every source site a complete edit must consider.</li>
+      <li><strong>Organize mutable systems by behavior as well as files.</strong> A runtime behavior can cross schemas, state, control flow, fallback paths, and documentation.</li>
+      <li><strong>Track shared state explicitly.</strong> Read-and-write registries expose distant dependencies that a top-down code read can miss.</li>
+      <li><strong>Use progressive disclosure to protect context.</strong> Start with the system and stage, then reveal only the implementation detail the request needs.</li>
+      <li><strong>Treat generated maps as memory, not evidence.</strong> Verify every locator against current source before planning an edit.</li>
+      <li><strong>Resynchronize after every accepted diff.</strong> Improvement memory that drifts away from the artifact can make later rounds confidently worse.</li>
+      <li><strong>Keep the evidence boundary visible.</strong> Planning metrics cannot substitute for compiled patches, regression tests, held-out task performance, or recursive gain.</li>
+    </ol>
+
+    <h2>Glossary</h2>
+
+    <div class="tablewrap" role="figure" aria-label="Glossary of Harness Handbook terms">
+      <div class="panel-eyebrow">Terms used in the paper</div>
+      <table>
+        <thead><tr><th>Term</th><th>Meaning here</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">Behavior localization</td><td>Finding every code location that implements the behavior named in a change request</td></tr>
+          <tr><td class="mono">Harness Handbook</td><td>A behavior-centric document tree and state-register view linked to source locations</td></tr>
+          <tr><td class="mono">BGPD</td><td>Behavior-Guided Progressive Disclosure, the coarse-to-fine navigation policy used to reach candidate edit sites</td></tr>
+          <tr><td class="mono">L1 / L2 / L3</td><td>System overview, execution-stage overview, and source-backed implementation detail</td></tr>
+          <tr><td class="mono">State register</td><td>A cross-stage record of one piece of state and the places that read or write it</td></tr>
+          <tr><td class="mono">Resynchronization</td><td>Refreshing affected handbook entries after a repository diff</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="refs" id="refs">
+      <h2>Sources</h2>
+      <ul>
+        <li>Wang, Shi, Li et al., Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable (2026) · <a href="https://arxiv.org/abs/2607.13285" target="_blank" rel="noopener">arxiv.org/abs/2607.13285</a></li>
+        <li>Paper HTML with full appendices, prompt templates, and an illustrative planning trace · <a href="https://arxiv.org/html/2607.13285v1" target="_blank" rel="noopener">arxiv.org/html/2607.13285v1</a></li>
+        <li>Harness Handbook project page · <a href="https://ruhan-wang.github.io/Harness-Handbook/" target="_blank" rel="noopener">ruhan-wang.github.io/Harness-Handbook</a></li>
+        <li><a href="agentic-harness-engineering.html">Local reading note: Agentic Harness Engineering</a> · trace-driven diagnosis and falsifiable harness edits</li>
+        <li><a href="self-harness.html">Local reading note: Self-Harness</a> · weakness mining and regression-gated self-evolution</li>
+      </ul>
+    </div>
+
+    <div class="nextrow">
+      <a class="next" href="aide2.html"><div><div class="label">Previous research note</div><div class="title">AIDE²: Net-positive RSI</div></div></a>
+      <a class="next" href="../chapters/ch03.html"><div><div class="label">Continue with the book</div><div class="title">Anatomy of an RSI system</div></div></a>
+    </div>
+  </article>
+</div>
+
+<footer class="site"><div class="foot-inner"><div><strong>The RSI Book</strong><span>Research notes on recursive self-improvement.</span></div><a href="../index.html">Book home <span aria-hidden="true">↑</span></a></div></footer>
+
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  window.mermaid=mermaid;
+  const lightVars={primaryColor:'#FFFFFF',primaryTextColor:'#00081B',primaryBorderColor:'#0E7CB0',lineColor:'#0E7CB0',secondaryColor:'#EAF7FE',tertiaryColor:'#F5F6F7',fontSize:'15px'};
+  const darkVars={primaryColor:'#1C2538',primaryTextColor:'#EAEEF6',primaryBorderColor:'#7FD4FB',lineColor:'#7FD4FB',secondaryColor:'#22304A',tertiaryColor:'#141B2B',fontSize:'15px'};
+  window.renderMermaid=function(){
+    const dark=document.documentElement.getAttribute('data-theme')==='dark';
+    document.querySelectorAll('.mermaid').forEach(function(el){if(!el.dataset.src)el.dataset.src=el.textContent;el.removeAttribute('data-processed');el.innerHTML=el.dataset.src;});
+    mermaid.initialize({startOnLoad:false,theme:'base',fontFamily:"'Geist', sans-serif",flowchart:{curve:'linear'},themeVariables:dark?darkVars:lightVars});
+    mermaid.run({querySelector:'.mermaid'});
+  };
+  window.renderMermaid();
+</script>
+<script>
+  const bar=document.getElementById('progress');
+  addEventListener('scroll',()=>{const h=document.documentElement;const max=h.scrollHeight-h.clientHeight;bar.style.width=(max>0?(h.scrollTop/max)*100:0)+'%';},{passive:true});
+  const btn=document.getElementById('toc-toggle');
+  const toc=document.getElementById('toc');
+  let scrim=document.querySelector('.toc-scrim');
+  if(!scrim){scrim=document.createElement('div');scrim.className='toc-scrim';document.body.appendChild(scrim);}
+  function setDrawer(open){toc.classList.toggle('open',open);scrim.classList.toggle('show',open);document.body.classList.toggle('drawer-open',open);btn.setAttribute('aria-expanded',open);btn.textContent=open?'Close':'Contents';}
+  btn.addEventListener('click',()=>setDrawer(!toc.classList.contains('open')));
+  scrim.addEventListener('click',()=>setDrawer(false));
+  toc.addEventListener('click',e=>{if(e.target.closest('a'))setDrawer(false);});
+  const root=document.documentElement;
+  const themeBtn=document.getElementById('theme-toggle');
+  function setTheme(t){root.setAttribute('data-theme',t);try{localStorage.setItem('rsi_theme',t);}catch(e){}if(themeBtn)themeBtn.setAttribute('aria-pressed',t==='dark');if(window.renderMermaid)window.renderMermaid();}
+  if(themeBtn){themeBtn.setAttribute('aria-pressed',root.getAttribute('data-theme')==='dark');themeBtn.addEventListener('click',()=>setTheme(root.getAttribute('data-theme')==='dark'?'light':'dark'));}
+  const shell=document.querySelector('.shell');
+  const sidebarBtn=document.getElementById('sidebar-toggle');
+  try{if(localStorage.getItem('rsi_sidebar')==='hidden')shell.classList.add('toc-hidden');}catch(e){}
+  if(sidebarBtn){sidebarBtn.addEventListener('click',()=>{const hidden=shell.classList.toggle('toc-hidden');try{localStorage.setItem('rsi_sidebar',hidden?'hidden':'open');}catch(e){}});}
+</script>
+</body>
+</html>
